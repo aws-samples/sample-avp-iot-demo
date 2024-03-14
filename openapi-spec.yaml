@@ -1,0 +1,302 @@
+openapi: 3.0.3
+info:
+  title: Amazon Verified Permissions - AWS IoT Demo
+  description: |-
+    API for operating IoT devices
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+  - url: /
+paths:
+  /{route+}:
+    options:
+      parameters:
+        - in: path
+          name: route+
+          schema:
+            type: string
+          required: true
+          description: Resources on any paths
+      summary: CORS support
+      description: |
+        Enable CORS for any paths by returning correct headers
+      tags:
+        - CORS
+      responses:
+        '200':
+          description: Default response for CORS method
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+            Access-Control-Allow-Methods:
+              schema:
+                type: string
+            Access-Control-Allow-Headers:
+              schema:
+                type: string
+          content: {}
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          default:
+            statusCode: '200'
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,PATCH'"
+              method.response.header.Access-Control-Allow-Origin: "'${cors_allow_origin}'"
+            responseTemplates:
+              application/json: |
+                {}
+  /roles/{id}/actions:
+    get:
+      operationId: listRoleActions
+      summary: List role actions
+      description: |
+        List a role's authorized actions
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Role ID
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleActions'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+        - Roles
+      security:
+        - jwtAuth: []
+      x-amazon-apigateway-integration:
+        uri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${user_actions_lambda_arn}/invocations
+        httpMethod: POST
+        type: AWS_PROXY
+  /files:
+    get:
+      operationId: listFiles
+      summary: List files
+      description: |
+        List available files to download to IoT devices
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Files'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+        - Files
+      security:
+        - jwtAuth: []
+      x-amazon-apigateway-integration:
+        uri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${user_actions_lambda_arn}/invocations
+        httpMethod: POST
+        type: AWS_PROXY
+  /devices:
+    get:
+      operationId: listDevices
+      summary: List devices
+      description: |
+        List IoT devices
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Devices'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+        - Devices
+      security:
+        - jwtAuth: []
+      x-amazon-apigateway-integration:
+        uri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${user_actions_lambda_arn}/invocations
+        httpMethod: POST
+        type: AWS_PROXY
+  /devices/{id}/files:
+    patch:
+      operationId: downloadFileToDevice
+      summary: Download a file
+      description: |
+        Download a file to IoT device based on an object key
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Device thing name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DownloadFileRequest'
+      responses:
+        '202':
+          description: Accepted
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+        - Devices
+      security:
+        - jwtAuth: []
+      x-amazon-apigateway-integration:
+        uri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${user_actions_lambda_arn}/invocations
+        httpMethod: POST
+        type: AWS_PROXY
+components:
+  responses:
+    BadRequest:
+      description: 400 Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HttpError'
+    Unauthorized:
+      description: 401 Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HttpError'
+    Forbidden:
+      description: 403 Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HttpError'
+    TooManyRequests:
+      description: 429 Too Many Requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HttpError'
+    NotFound:
+      description: 404 Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HttpError'
+    InternalServerError:
+      description: 500 Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HttpError'
+  schemas:
+    HttpError:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+    RoleActions:
+      type: object
+      required:
+        - actions
+      properties:
+        actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Actions'
+    Actions:
+      type: string
+      enum:
+        - listRoleActions
+        - listFiles
+        - listDevices
+        - downloadFileToDevice
+        - getFile
+        - updateDevice
+    Files:
+      type: object
+      required:
+        - keys
+      properties:
+        keys:
+          type: array
+          description: File object keys
+          items:
+            type: string
+    Devices:
+      type: object
+      required:
+        - thingNames
+      properties:
+        thingNames:
+          type: array
+          items:
+            type: string
+    DownloadFileRequest:
+      type: object
+      required:
+        - objectKey
+      properties:
+        objectKey:
+          type: string
+  securitySchemes:
+    jwtAuth:
+      type: apiKey
+      name: Authorization
+      in: header
+      x-amazon-apigateway-authtype: custom
+      x-amazon-apigateway-authorizer:
+        type: request
+        identitySource: method.request.header.Authorization
+        authorizerUri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambda_authorizer_arn}/invocations
+        authorizerResultTtlInSeconds: 300
