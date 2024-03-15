@@ -53,6 +53,8 @@
     "@aws-cdk/aws-efs:denyAnonymousAccess": true,
     "@aws-cdk/aws-opensearchservice:enableOpensearchMultiAzWithStandby": true,
     "@aws-cdk/aws-lambda-nodejs:useLatestRuntimeVersion": true,
-    "@aws-cdk/aws-efs:mountTargetOrderInsensitiveLogicalId": true
+    "@aws-cdk/aws-efs:mountTargetOrderInsensitiveLogicalId": true,
+    "mock-data/managerRoleId": "00000000-0000-0000-0000-000000000001",
+    "mock-data/operatorRoleId": "00000000-0000-0000-0000-000000000002"
   }
 }

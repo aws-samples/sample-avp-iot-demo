@@ -6,7 +6,8 @@ from aws_cdk import (
 )
 from constructs import Construct
 
-from avp_iot_demo.avp_iot_demo_apigateway import AvpIotDemoApiGateway
+from avp_iot_demo.apigateway_construct import AvpIotDemoApiGateway
+from avp_iot_demo.policy_store.policy_store_construct import AvpPolicyStore
 
 
 class AvpIotDemoStack(Stack):
@@ -35,10 +36,15 @@ def handler(event, context):
 
         apigateway = AvpIotDemoApiGateway(
             self,
-            "avp-iot-demo-api",
+            "AvpIotDemoApi",
             cors_allow_origin="http://localhost:3000",
-            user_actions_lambda_arn=lambda_fn.function_arn,
+            role_actions_lambda_arn=lambda_fn.function_arn,
             lambda_authorizer_arn=lambda_fn.function_arn,
+        )
+
+        policy_store = AvpPolicyStore(
+            self,
+            "AvpIoTDemoPolicyStore"
         )
 
         # example resource

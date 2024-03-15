@@ -1,0 +1,73 @@
+{
+	"AVP::IoT::Demo": {
+		"actions": {
+			"listRoleActions": {
+				"appliesTo": {
+					"resourceTypes": [
+						"Role"
+					],
+					"principalTypes": [
+						"Role"
+					]
+				}
+			},
+			"listDevices": {
+				"appliesTo": {
+					"resourceTypes": [
+						"Device"
+					],
+					"principalTypes": [
+						"Role"
+					]
+				}
+			},
+			"updateDevice": {
+				"appliesTo": {
+					"resourceTypes": [
+						"Device"
+					],
+					"principalTypes": [
+						"Role"
+					]
+				}
+			},
+			"listFiles": {
+				"appliesTo": {
+					"resourceTypes": [
+						"File"
+					],
+					"principalTypes": [
+						"Role"
+					]
+				}
+			},
+			"getFile": {
+				"appliesTo": {
+					"resourceTypes": [
+						"File"
+					],
+					"principalTypes": [
+						"Role"
+					]
+				}
+			}
+		},
+		"entityTypes": {
+			"Role": {
+				"memberOfTypes": [
+					"Role"
+				]
+			},
+			"Device": {
+				"memberOfTypes": [
+					"Device"
+				]
+			},
+			"File": {
+				"memberOfTypes": [
+					"File"
+				]
+			}
+		}
+	}
+}
