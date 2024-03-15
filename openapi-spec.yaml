@@ -92,7 +92,7 @@ paths:
       security:
         - jwtAuth: []
       x-amazon-apigateway-integration:
-        uri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${user_actions_lambda_arn}/invocations
+        uri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${role_actions_lambda_arn}/invocations
         httpMethod: POST
         type: AWS_PROXY
   /files:
@@ -123,7 +123,7 @@ paths:
       security:
         - jwtAuth: []
       x-amazon-apigateway-integration:
-        uri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${user_actions_lambda_arn}/invocations
+        uri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${role_actions_lambda_arn}/invocations
         httpMethod: POST
         type: AWS_PROXY
   /devices:
@@ -154,7 +154,7 @@ paths:
       security:
         - jwtAuth: []
       x-amazon-apigateway-integration:
-        uri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${user_actions_lambda_arn}/invocations
+        uri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${role_actions_lambda_arn}/invocations
         httpMethod: POST
         type: AWS_PROXY
   /devices/{id}/files:
@@ -196,7 +196,7 @@ paths:
       security:
         - jwtAuth: []
       x-amazon-apigateway-integration:
-        uri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${user_actions_lambda_arn}/invocations
+        uri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${role_actions_lambda_arn}/invocations
         httpMethod: POST
         type: AWS_PROXY
 components:
@@ -258,11 +258,10 @@ components:
       type: string
       enum:
         - listRoleActions
-        - listFiles
         - listDevices
-        - downloadFileToDevice
-        - getFile
         - updateDevice
+        - listFiles
+        - getFile
     Files:
       type: object
       required:
