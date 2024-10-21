@@ -95,6 +95,8 @@ paths:
         uri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${role_actions_lambda_arn}/invocations
         httpMethod: POST
         type: AWS_PROXY
+      x-permissions-actions:
+        - listRoleActions
   /files:
     get:
       operationId: listFiles
@@ -126,6 +128,8 @@ paths:
         uri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${role_actions_lambda_arn}/invocations
         httpMethod: POST
         type: AWS_PROXY
+      x-permissions-actions:
+        - listFiles
   /devices:
     get:
       operationId: listDevices
@@ -157,6 +161,8 @@ paths:
         uri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${role_actions_lambda_arn}/invocations
         httpMethod: POST
         type: AWS_PROXY
+      x-permissions-actions:
+        - listDevices
   /devices/{id}/files:
     patch:
       operationId: downloadFileToDevice
@@ -199,6 +205,9 @@ paths:
         uri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${role_actions_lambda_arn}/invocations
         httpMethod: POST
         type: AWS_PROXY
+      x-permissions-actions:
+        - updateDevice
+        - getFile
 components:
   responses:
     BadRequest:

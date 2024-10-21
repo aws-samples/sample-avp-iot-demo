@@ -55,6 +55,7 @@
     "@aws-cdk/aws-lambda-nodejs:useLatestRuntimeVersion": true,
     "@aws-cdk/aws-efs:mountTargetOrderInsensitiveLogicalId": true,
     "mock-data/managerRoleId": "00000000-0000-0000-0000-000000000001",
-    "mock-data/operatorRoleId": "00000000-0000-0000-0000-000000000002"
+    "mock-data/operatorRoleId": "00000000-0000-0000-0000-000000000002",
+    "mock-data/deploySampleIoTDeviceFilesToS3": "true"
   }
 }
