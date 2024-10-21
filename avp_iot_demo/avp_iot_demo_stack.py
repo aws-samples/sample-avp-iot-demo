@@ -8,6 +8,7 @@ from constructs import Construct
 
 from avp_iot_demo.apigateway_construct import AvpIotDemoApiGateway
 from avp_iot_demo.policy_store.policy_store_construct import AvpPolicyStore
+from avp_iot_demo.s3_construct import IoTDeviceFilesS3Bucket
 
 
 class AvpIotDemoStack(Stack):
@@ -45,6 +46,15 @@ def handler(event, context):
         policy_store = AvpPolicyStore(
             self,
             "AvpIoTDemoPolicyStore"
+        )
+
+        is_deploy_sample_files = bool(self.node.try_get_context(
+            'mock-data/deploySampleIoTDeviceFilesToS3') == 'true')
+
+        IoTDeviceFilesS3Bucket(
+            self,
+            "AvpIotDemoDeviceFilesS3Bucket",
+            deploy_sample_files=is_deploy_sample_files
         )
 
         # example resource
