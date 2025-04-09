@@ -1,73 +1,57 @@
 {
-	"AVP::IoT::Demo": {
-		"actions": {
-			"listRoleActions": {
-				"appliesTo": {
-					"resourceTypes": [
-						"Role"
-					],
-					"principalTypes": [
-						"Role"
-					]
-				}
-			},
-			"listDevices": {
-				"appliesTo": {
-					"resourceTypes": [
-						"Device"
-					],
-					"principalTypes": [
-						"Role"
-					]
-				}
-			},
-			"updateDevice": {
-				"appliesTo": {
-					"resourceTypes": [
-						"Device"
-					],
-					"principalTypes": [
-						"Role"
-					]
-				}
-			},
-			"listFiles": {
-				"appliesTo": {
-					"resourceTypes": [
-						"File"
-					],
-					"principalTypes": [
-						"Role"
-					]
-				}
-			},
-			"getFile": {
-				"appliesTo": {
-					"resourceTypes": [
-						"File"
-					],
-					"principalTypes": [
-						"Role"
-					]
-				}
-			}
-		},
-		"entityTypes": {
-			"Role": {
-				"memberOfTypes": [
-					"Role"
-				]
-			},
-			"Device": {
-				"memberOfTypes": [
-					"Device"
-				]
-			},
-			"File": {
-				"memberOfTypes": [
-					"File"
-				]
-			}
-		}
-	}
+    "AvpIotDemoApi": {
+        "entityTypes": {
+            "User": {
+                "shape": {
+                    "type": "Record",
+                    "attributes": {}
+                },
+                "memberOfTypes": [
+                    "UserGroup"
+                ]
+            },
+            "UserGroup": {
+                "shape": {
+                    "attributes": {},
+                    "type": "Record"
+                }
+            },
+            "Application": {
+                "shape": {
+                    "attributes": {},
+                    "type": "Record"
+                }
+            }
+        },
+        "actions": {
+            "get /devices": {
+                "appliesTo": {
+                    "context": {
+                        "type": "Record",
+                        "attributes": {}
+                    },
+                    "principalTypes": [
+                        "User"
+                    ],
+                    "resourceTypes": [
+                        "Application"
+                    ]
+                }
+            },
+            "post /download": {
+                "appliesTo": {
+                    "context": {
+                        "type": "Record",
+                        "attributes": {}
+                    },
+                    "principalTypes": [
+                        "User"
+                    ],
+                    "resourceTypes": [
+                        "Application"
+                    ]
+                }
+            }
+        }
+    }
 }
