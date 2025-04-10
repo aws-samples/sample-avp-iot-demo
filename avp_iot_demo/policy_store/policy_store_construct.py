@@ -1,5 +1,5 @@
 import os
-from aws_cdk import aws_verifiedpermissions as verifiedpermissions, CfnOutput, Fn
+from aws_cdk import aws_verifiedpermissions as verifiedpermissions, CfnOutput, Stack
 from constructs import Construct
 from utils.string_utils import file_to_string
 
@@ -27,9 +27,29 @@ class AvpPolicyStore(Construct):
         )
         self._policy_store_id = cfn_policy_store.attr_policy_store_id
 
-        # Manager policy statement
+        # Add Cognito Identity Source
+        identity_source = verifiedpermissions.CfnIdentitySource(
+            self,
+            "CognitoIdentitySource",
+            configuration=verifiedpermissions.CfnIdentitySource.IdentitySourceConfigurationProperty(
+                cognito_user_pool_configuration=verifiedpermissions.CfnIdentitySource.CognitoUserPoolConfigurationProperty(
+                    user_pool_arn=f"arn:aws:cognito-idp:us-east-1:{Stack.of(self).account}:userpool/{user_pool_id}",
+                )
+            ),
+            policy_store_id=self._policy_store_id,
+            principal_entity_type="AvpIotDemoApi::User",
+        )
+
+        identity_source.add_override(
+            "Properties.Configuration.CognitoUserPoolConfiguration.GroupConfiguration",
+            {"GroupEntityType": "AvpIotDemoApi::UserGroup"},
+        )
+
+        # Ensure identity source is created after policy store
+        identity_source.node.add_dependency(cfn_policy_store)
+
         manager_policy_statement = f"""permit (
-            principal in AvpIotDemoApi::UserGroup::"${{user_pool_id}}|manager",
+            principal in AvpIotDemoApi::UserGroup::"{user_pool_id}|manager",
             action in [
                 AvpIotDemoApi::Action::"get /devices",
                 AvpIotDemoApi::Action::"post /download"
@@ -39,7 +59,7 @@ class AvpPolicyStore(Construct):
 
         # Operator policy statement
         operator_policy_statement = f"""permit (
-            principal in AvpIotDemoApi::UserGroup::"${{user_pool_id}}|operator",
+            principal in AvpIotDemoApi::UserGroup::"{user_pool_id}|operator",
             action in [
                 AvpIotDemoApi::Action::"get /devices"
             ],
@@ -53,9 +73,7 @@ class AvpPolicyStore(Construct):
             policy_store_id=self._policy_store_id,
             definition=verifiedpermissions.CfnPolicy.PolicyDefinitionProperty(
                 static=verifiedpermissions.CfnPolicy.StaticPolicyDefinitionProperty(
-                    statement=Fn.sub(
-                        manager_policy_statement, {"user_pool_id": user_pool_id}
-                    )
+                    statement=manager_policy_statement
                 )
             ),
         )
@@ -67,9 +85,7 @@ class AvpPolicyStore(Construct):
             policy_store_id=self._policy_store_id,
             definition=verifiedpermissions.CfnPolicy.PolicyDefinitionProperty(
                 static=verifiedpermissions.CfnPolicy.StaticPolicyDefinitionProperty(
-                    statement=Fn.sub(
-                        operator_policy_statement, {"user_pool_id": user_pool_id}
-                    )
+                    statement=operator_policy_statement
                 )
             ),
         )
@@ -77,6 +93,7 @@ class AvpPolicyStore(Construct):
         manager_policy.node.add_dependency(cfn_policy_store)
         operator_policy.node.add_dependency(cfn_policy_store)
 
+        # Output the policy store ID
         CfnOutput(
             self,
             "PolicyStoreId",

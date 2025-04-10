@@ -8,16 +8,33 @@ from avp_iot_demo.s3_construct import IoTDeviceFilesS3Bucket
 from avp_iot_demo.lambda_construct import Lambdas
 from avp_iot_demo.cognito_construct import CognitoConstruct
 
+import json
+from typing import Optional
+
+def get_user_pool_id(config_path: str) -> Optional[str]:
+    try:
+        with open(config_path, 'r') as f:
+            amplify_config = json.load(f)
+            return amplify_config.get('auth', {}).get('user_pool_id')
+    except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
+        print(f"Error reading config file: {e}")
+        return None
 
 class AvpIotDemoStack(Stack):
-
-    def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, config_path: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        cognito = CognitoConstruct(self, "CognitoConstruct")
+        # Get user pool ID from config
+        user_pool_id = get_user_pool_id(config_path)
+        print(f"User Pool ID: {user_pool_id}")
+        if not user_pool_id:
+            raise ValueError("Could not find user_pool_id in config file")
 
-        policy_store = AvpPolicyStore(self, "AvpIoTDemoPolicyStore", user_pool_id=cognito.user_pool_id)
-        policy_store.node.add_dependency(cognito)
+        policy_store = AvpPolicyStore(
+            self, 
+            "AvpIoTDemoPolicyStore", 
+            user_pool_id=user_pool_id 
+        )
 
         lambdas = Lambdas(self, "DemoLambdas", policy_store_id=policy_store.policy_store_id)
 
