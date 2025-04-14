@@ -133,7 +133,8 @@ class IoTThingStack(Stack):
         CfnOutput(
             self, "ThingName",
             value=thing.thing_name,
-            description="IoT Thing Name"
+            description="IoT Thing Name",
+            export_name="IoTThingName-Export"
         )
         
         CfnOutput(

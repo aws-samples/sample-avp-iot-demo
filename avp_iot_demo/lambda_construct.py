@@ -3,7 +3,7 @@ from constructs import Construct
 
 
 class Lambdas(Construct):
-    def __init__(self, scope: Construct, id: str, policy_store_id: str) -> None:
+    def __init__(self, scope: Construct, id: str, policy_store_id: str, thing_name: str) -> None:
         super().__init__(scope, id)
 
         # no longer needed, keeping it in case we change our minds
@@ -43,6 +43,9 @@ class Lambdas(Construct):
             runtime=_lambda.Runtime.PYTHON_3_11,
             handler="download.lambda_handler",
             code=_lambda.Code.from_asset("lambdas/integration"),
+            environment={
+                "IOT_THING_NAME": thing_name,
+            },
         )
 
         self.role_integration_fn = _lambda.Function(

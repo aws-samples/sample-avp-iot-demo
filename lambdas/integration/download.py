@@ -1,5 +1,6 @@
 import json
 import boto3
+import os
 from datetime import datetime, timezone
 
 def lambda_handler(event, context):
@@ -22,8 +23,7 @@ def lambda_handler(event, context):
     
     print(f"Extracted s3Path: {s3Path}")
     
-    # TODO: grab this from IoT stack
-    iotDevice = "testDevice"
+    iotDevice = os.environ['IOT_THING_NAME']
     
     timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%SZ')
     
@@ -37,7 +37,7 @@ def lambda_handler(event, context):
     
     try:
         response = iot_client.publish(
-            topic='device/data',  # Adjust for IoT topic
+            topic='my/custom/topic',  # Adjust for IoT topic
             qos=1,
             payload=json.dumps(message)
         )

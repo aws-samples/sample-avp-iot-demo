@@ -1,4 +1,4 @@
-from aws_cdk import Stack, CfnOutput
+from aws_cdk import Stack, CfnOutput, Fn
 from constructs import Construct
 
 
@@ -38,7 +38,11 @@ class AvpIotDemoStack(Stack):
             user_pool_id=user_pool_id 
         )
 
-        lambdas = Lambdas(self, "DemoLambdas", policy_store_id=policy_store.policy_store_id)
+        thing_name = Fn.import_value("IoTThingName-Export")
+        # print(f"Thing Name: {thing_name}")
+
+
+        lambdas = Lambdas(self, "DemoLambdas", policy_store_id=policy_store.policy_store_id, thing_name=thing_name)
 
         apigateway = AvpIotDemoApiGateway(
             self,
