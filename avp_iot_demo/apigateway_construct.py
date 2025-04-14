@@ -20,12 +20,14 @@ class AvpIotDemoApiGateway(Construct):
 
     def __init__(
         self,
-            scope: Construct,
-            construct_id: str,
-            cors_allow_origin: str,
-            role_actions_lambda_arn: str,
-            lambda_authorizer_arn: str,
-            **kwargs
+        scope: Construct,
+        construct_id: str,
+        cors_allow_origin: str,
+        devices_lambda_arn: str,
+        download_lambda_arn: str,
+        role_lambda_arn: str,
+        lambda_authorizer_arn: str,
+        **kwargs,
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
@@ -34,19 +36,31 @@ class AvpIotDemoApiGateway(Construct):
             f'{os.path.join(os.path.dirname(__file__), "..", "openapi-spec.yaml")}',
             _OpenApiVariableMapping(
                 cors_allow_origin=cors_allow_origin,
-                role_actions_lambda_arn=role_actions_lambda_arn,
-                lambda_authorizer_arn=lambda_authorizer_arn
-            ))
+                devices_lambda_arn=devices_lambda_arn,
+                download_lambda_arn=download_lambda_arn,
+                role_lambda_arn=role_lambda_arn,
+                lambda_authorizer_arn=lambda_authorizer_arn,
+            ),
+        )
 
         # Create an API Gateway REST API from the OpenAPI spec
         self._apigateway = apigateway.SpecRestApi(
-            self, "AvpIotDemoApi",
-            api_definition=apigateway.ApiDefinition.from_inline(openapi_spec)
+            self,
+            "AvpIotDemoApi",
+            api_definition=apigateway.ApiDefinition.from_inline(openapi_spec),
         )
 
     @property
     def apigateway(self) -> apigateway.SpecRestApi:
         return self._apigateway
+
+    @property
+    def api_endpoint(self) -> str:
+        return self._apigateway.url
+
+    @property
+    def api_id(self) -> str:
+        return self._apigateway.rest_api_id
 
     def __get_openapi_spec(cls, path: str, var_mapping: _OpenApiVariableMapping) -> Any:
         """

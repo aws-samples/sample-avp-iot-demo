@@ -4,10 +4,12 @@ import os
 import aws_cdk as cdk
 
 from avp_iot_demo.avp_iot_demo_stack import AvpIotDemoStack
+from avp_iot_demo.amplify_stack import AmplifyStack
+from iot_stack.ec2_iot_device import IoTThingStack
 
 
 app = cdk.App()
-AvpIotDemoStack(app, "AvpIotDemoStack",
+AvpIotDemoStack(app, "AvpIotDemoStack", config_path="web_app/amplify_outputs.json" 
     # If you don't specify 'env', this stack will be environment-agnostic.
     # Account/Region-dependent features and context lookups will not work,
     # but a single synthesized template can be deployed anywhere.
@@ -24,5 +26,9 @@ AvpIotDemoStack(app, "AvpIotDemoStack",
 
     # For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html
     )
+AmplifyStack(app, "AmplifyStack")
+IoTThingStack(app, "IoTThingStack")
+
+
 
 app.synth()
