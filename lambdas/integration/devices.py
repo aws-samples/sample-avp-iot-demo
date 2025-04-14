@@ -5,12 +5,21 @@ from botocore.exceptions import ClientError
 def lambda_handler(event, context):
     iot_client = boto3.client('iot')
     
+    # Define CORS headers
+    headers = {
+        'Access-Control-Allow-Origin': '*',  # TODO: use Amplify domain
+        'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token',
+        'Access-Control-Allow-Methods': 'GET,OPTIONS',
+        'Access-Control-Allow-Credentials': 'true'
+    }
+    
     try:
         response = iot_client.list_things()
         things = response['things']
         
         return {
             'statusCode': 200,
+            'headers': headers,
             'body': json.dumps({
                 'message': 'Successfully retrieved IoT things',
                 'things': things
@@ -23,6 +32,7 @@ def lambda_handler(event, context):
         
         return {
             'statusCode': error_code,
+            'headers': headers,
             'body': json.dumps({
                 'error': error_message,
                 'type': 'ClientError'
@@ -32,6 +42,7 @@ def lambda_handler(event, context):
     except Exception as e:
         return {
             'statusCode': 500,
+            'headers': headers,
             'body': json.dumps({
                 'error': str(e),
                 'type': 'GeneralException'

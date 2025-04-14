@@ -3,6 +3,14 @@ import boto3
 from datetime import datetime, timezone
 
 def lambda_handler(event, context):
+    # Define CORS headers
+    headers = {
+        'Access-Control-Allow-Origin': '*',  # TODO: use Amplify domain
+        'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token',
+        'Access-Control-Allow-Methods': 'POST,OPTIONS',
+        'Access-Control-Allow-Credentials': 'true'
+    }
+
     # Extract s3Path from authorizer context
     try:
         authorizer_context = event['requestContext']['authorizer']
@@ -36,6 +44,7 @@ def lambda_handler(event, context):
         
         return {
             'statusCode': 200,
+            'headers': headers,
             'body': json.dumps({
                 'message': 'Successfully published to IoT Core',
                 'data': message
@@ -45,6 +54,7 @@ def lambda_handler(event, context):
     except Exception as e:
         return {
             'statusCode': 500,
+            'headers': headers,
             'body': json.dumps({
                 'error': str(e)
             })
