@@ -29,6 +29,8 @@ class AvpIotDemoStack(Stack):
         print(f"User Pool ID: {user_pool_id}")
         if not user_pool_id:
             raise ValueError("Could not find user_pool_id in config file")
+        
+        cognito = CognitoConstruct(self, "CognitoConstruct", user_pool_id=user_pool_id)
 
         policy_store = AvpPolicyStore(
             self, 
