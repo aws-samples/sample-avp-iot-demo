@@ -5,6 +5,7 @@ import aws_cdk as cdk
 
 from avp_iot_demo.avp_iot_demo_stack import AvpIotDemoStack
 from avp_iot_demo.amplify_stack import AmplifyStack
+from iot_stack.ec2_iot_device import IoTThingStack
 
 
 app = cdk.App()
@@ -26,6 +27,7 @@ AvpIotDemoStack(app, "AvpIotDemoStack", config_path="web_app/amplify_outputs.jso
     # For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html
     )
 AmplifyStack(app, "AmplifyStack")
+IoTThingStack(app, "IoTThingStack")
 
 
 
