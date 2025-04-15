@@ -4,8 +4,8 @@ export async function GET(request: Request) {
   const token = request.headers.get('Authorization');
 
   try {
-    // make sure to have an .env.local file at root of the project with API_URL defined 
-    const response = await fetch(`${process.env.API_URL}/prod/role`, {
+    // make sure the API endpoint is correctly defined in the .env.local file
+    const response = await fetch(`${process.env.API_URL}role`, {
       method: 'GET',
       headers: {
         'Authorization': token || '',
