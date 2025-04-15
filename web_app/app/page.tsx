@@ -13,7 +13,7 @@ interface ApiResponse {
   [key: string]: any;
 }
 
-const ALLOWED_ENDPOINTS = ['role', 'devices', 'download'];
+const ALLOWED_ENDPOINTS = ["role", "devices", "download"];
 
 export default function App() {
   const { signOut } = useAuthenticator();
@@ -30,7 +30,6 @@ export default function App() {
   ) => {
     setIsLoading(true);
     try {
-
       // Validate endpoint
       if (!ALLOWED_ENDPOINTS.includes(endpoint)) {
         throw new Error("Invalid endpoint");
@@ -111,7 +110,7 @@ export default function App() {
 
   // Sanitize s3filePath input
   const handleS3FilePathChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const sanitizedPath = e.target.value.replace(/[^a-zA-Z0-9-_./]/g, '');
+    const sanitizedPath = e.target.value.replace(/[^a-zA-Z0-9-_./]/g, "");
     sets3FilePath(sanitizedPath);
   };
 
@@ -147,7 +146,7 @@ export default function App() {
 
         {apiData && (
           <div>
-            <h2>Result from API:</h2>
+            <h2 className="paragraphs">Result from API:</h2>
             <pre>{JSON.stringify(apiData, null, 2)}</pre>
           </div>
         )}

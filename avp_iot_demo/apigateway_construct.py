@@ -51,10 +51,6 @@ class AvpIotDemoApiGateway(Construct):
         )
 
     @property
-    def apigateway(self) -> apigateway.SpecRestApi:
-        return self._apigateway
-
-    @property
     def api_endpoint(self) -> str:
         return self._apigateway.url
 

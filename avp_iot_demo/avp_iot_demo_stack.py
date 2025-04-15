@@ -11,26 +11,27 @@ from avp_iot_demo.cognito_construct import CognitoConstruct
 import json
 from typing import Optional
 
-def get_user_pool_id(config_path: str) -> Optional[str]:
-    try:
-        with open(config_path, 'r') as f:
-            amplify_config = json.load(f)
-            return amplify_config.get('auth', {}).get('user_pool_id')
-    except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
-        print(f"Error reading config file: {e}")
-        return None
+# def get_user_pool_id(config_path: str) -> Optional[str]:
+#     try:
+#         with open(config_path, 'r') as f:
+#             amplify_config = json.load(f)
+#             return amplify_config.get('auth', {}).get('user_pool_id')
+#     except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
+#         print(f"Error reading config file: {e}")
+#         return None
 
 class AvpIotDemoStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, config_path: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         # Get user pool ID from config
-        user_pool_id = get_user_pool_id(config_path)
-        print(f"User Pool ID: {user_pool_id}")
-        if not user_pool_id:
-            raise ValueError("Could not find user_pool_id in config file")
+        # user_pool_id = get_user_pool_id(config_path)
+        # print(f"User Pool ID: {user_pool_id}")
+        # if not user_pool_id:
+        #     raise ValueError("Could not find user_pool_id in config file")
         
-        cognito = CognitoConstruct(self, "CognitoConstruct", user_pool_id=user_pool_id)
+        cognito = CognitoConstruct(self, "CognitoConstruct")
+        user_pool_id = cognito.user_pool.user_pool_id
 
         policy_store = AvpPolicyStore(
             self, 
@@ -38,9 +39,8 @@ class AvpIotDemoStack(Stack):
             user_pool_id=user_pool_id 
         )
 
+        # Import thing name from IoT stack
         thing_name = Fn.import_value("IoTThingName-Export")
-        # print(f"Thing Name: {thing_name}")
-
 
         lambdas = Lambdas(self, "DemoLambdas", policy_store_id=policy_store.policy_store_id, thing_name=thing_name)
 
@@ -69,6 +69,24 @@ class AvpIotDemoStack(Stack):
             value=apigateway.api_id,
             description="API Gateway ID",
             export_name="ApiGatewayId",
+        )
+
+        CfnOutput(
+            self,
+            "CognitoUserPoolId",
+            value=cognito.cognito_user_pool_id,
+            description="User Pool ID",
+            export_name="CognitoUserPoolId"
+
+        )
+
+        CfnOutput(
+            self,
+            "CognitoClientId",
+            value=cognito.cognito_client_id,
+            description="User Client ID",
+            export_name="CognitoClientId"
+
         )
 
         is_deploy_sample_files = bool(

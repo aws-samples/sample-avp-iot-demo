@@ -12,9 +12,6 @@ export async function GET(request: Request) {
       },
     });
 
-    console.log("Response from role route: ")
-    console.log(response)
-
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error: any) {
