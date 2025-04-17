@@ -13,7 +13,7 @@ def read_cdk_outputs():
         with open(outputs_path, 'r') as f:
             outputs = json.load(f)
 
-        # Extract the required values from the AvpIotDemoStack
+        # get values from AvpIotDemoStack
         stack_outputs = outputs['AvpIotDemoStack']
         return {
             'api_url': stack_outputs['ApiGatewayEndpoint'],
@@ -35,11 +35,10 @@ def read_cdk_outputs():
 
 def update_files(env_file_path, amplify_outputs_path):
     try:
-        # Get values from CDK outputs
         print("Reading values from outputs.json...")
         values = read_cdk_outputs()
         
-        # Update .env.local file
+        # Attempt to update .env.local file
         try:
             with open(env_file_path, 'r') as f:
                 env_content = f.read()
@@ -55,16 +54,15 @@ def update_files(env_file_path, amplify_outputs_path):
             print(f"Error updating .env.local: {str(e)}")
             sys.exit(1)
 
-        # Update amplify_outputs.json file
+        # Attempt to update amplify_outputs.json file
         try:
             with open(amplify_outputs_path, 'r') as f:
                 amplify_outputs = json.load(f)
             
-            # Update both user_pool_id and user_pool_client_id
+            # Update user_pool_id and user_pool_client_id
             amplify_outputs['auth']['user_pool_id'] = values['user_pool_id']
             amplify_outputs['auth']['user_pool_client_id'] = values['client_id']
             
-            # Write back the updated JSON with proper formatting
             with open(amplify_outputs_path, 'w') as f:
                 json.dump(amplify_outputs, f, indent=2)
                 
@@ -79,23 +77,34 @@ def update_files(env_file_path, amplify_outputs_path):
         print(f"Error: {str(e)}")
         sys.exit(1)
 
+def create_env_file(env_file_path):
+    """Create a new .env.local file with default template"""
+    try:    
+        # Create .env.local with default content
+        with open(env_file_path, 'w') as f:
+            f.write('API_URL=API_URL_FROM_OUTPUTS\n')
+        print(f"Created new {env_file_path} file with default template")
+    except Exception as e:
+        print(f"Error creating {env_file_path}: {str(e)}")
+        sys.exit(1)
+
 if __name__ == "__main__":
-    # Get the script's directory
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    # Navigate up one level from utils and then into web_app
     env_file_path = os.path.join(script_dir, '..', 'web_app', '.env.local')
     amplify_outputs_path = os.path.join(script_dir, '..', 'web_app', 'amplify_outputs.json')
     
-    # Normalize the paths for the current operating system
     env_file_path = os.path.normpath(env_file_path)
     amplify_outputs_path = os.path.normpath(amplify_outputs_path)
     
-    # Verify files exist before proceeding
+    # Create .env.local if it doesn't exist
     if not os.path.exists(env_file_path):
-        print(f"Error: {env_file_path} does not exist")
-        sys.exit(1)
+        print(f".env.local not found, creating it...")
+        create_env_file(env_file_path)
+    
+    # Verify amplify_outputs.json exists
     if not os.path.exists(amplify_outputs_path):
         print(f"Error: {amplify_outputs_path} does not exist")
         sys.exit(1)
         
     update_files(env_file_path, amplify_outputs_path)
+
