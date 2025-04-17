@@ -3,15 +3,6 @@ import base64
 import os
 
 def lambda_handler(event, context):
-    print(f"Received event: {event}")
-    
-    headers = {
-        'Access-Control-Allow-Origin': '*',  # Or your specific domain
-        'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token',
-        'Access-Control-Allow-Methods': 'GET,OPTIONS',
-        'Access-Control-Allow-Credentials': 'true'
-    }
-    
     try:
         bearer_token = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization')
         if not bearer_token:
@@ -35,7 +26,6 @@ def lambda_handler(event, context):
         if not groups:
             return {
                 'statusCode': 200,
-                'headers': headers,
                 'body': json.dumps({'message': 'User does not belong to any group'})
             }
         
@@ -44,7 +34,6 @@ def lambda_handler(event, context):
         
         return {
             'statusCode': 200,
-            'headers': headers,
             'body': json.dumps({'group': user_group})
         }
     
@@ -52,20 +41,17 @@ def lambda_handler(event, context):
         print(f"ValueError: {str(ve)}")
         return {
             'statusCode': 400,
-            'headers': headers,
             'body': json.dumps({'error': str(ve)})
         }
     except json.JSONDecodeError as je:
         print(f"JSONDecodeError: {str(je)}")
         return {
             'statusCode': 400,
-            'headers': headers,
             'body': json.dumps({'error': 'Invalid token format'})
         }
     except Exception as e:
         print(f"Unexpected error: {str(e)}")
         return {
             'statusCode': 500,
-            'headers': headers,
             'body': json.dumps({'error': 'Internal server error'})
         }

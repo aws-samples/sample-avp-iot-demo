@@ -33,7 +33,7 @@ class AvpIotDemoApiGateway(Construct):
 
         # Get the OpenAPI spec from a YAML template as a dictionary
         openapi_spec = self.__get_openapi_spec(
-            f'{os.path.join(os.path.dirname(__file__), "..", "openapi-spec.yaml")}',
+            f'{os.path.join(os.path.dirname(__file__), "openapi-spec.yaml")}',
             _OpenApiVariableMapping(
                 cors_allow_origin=cors_allow_origin,
                 devices_lambda_arn=devices_lambda_arn,

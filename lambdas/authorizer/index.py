@@ -79,7 +79,7 @@ def lambda_handler(event, context):
             },
             'context': {
                 'actionId': action_id,
-                's3Path': s3_path  # Pass s3Path to the integration Lambda
+                's3Path': s3_path
             }
         }
         print(f"Final response: {response}")
