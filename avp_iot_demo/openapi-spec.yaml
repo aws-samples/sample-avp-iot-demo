@@ -1,79 +1,20 @@
 openapi: 3.0.3
 info:
-  title: Amazon Verified Permissions - AWS IoT Demo
-  description: |-
-    API for operating IoT devices
-  license:
-    name: Apache 2.0
-    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: AVP - AWS IoT Demo blog post
+  description: API for AVP blog post
   version: 1.0.0
 servers:
   - url: /
 
-x-amazon-apigateway-cors: {
-  allowOrigins: ["*"],  # or specific domains like ["https://yourdomain.com"]
-  allowMethods: ["GET", "POST", "OPTIONS"],
-  allowHeaders: ["Content-Type", "Authorization", "X-Amz-Date", "X-Api-Key", "X-Amz-Security-Token"],
-  allowCredentials: true,
-  maxAge: 3600
-}
-
 paths:
   /devices:
-    options:
-      summary: CORS support for devices
-      description: Enable CORS by returning correct headers
-      responses:
-        '200':
-          description: CORS response
-          headers:
-            Access-Control-Allow-Origin:
-              schema:
-                type: string
-            Access-Control-Allow-Methods:
-              schema:
-                type: string
-            Access-Control-Allow-Headers:
-              schema:
-                type: string
-            Access-Control-Allow-Credentials:
-              schema:
-                type: string
-          content: {}
-      x-amazon-apigateway-integration:
-        type: mock
-        requestTemplates:
-          application/json: '{"statusCode": 200}'
-        responses:
-          default:
-            statusCode: "200"
-            responseParameters:
-              method.response.header.Access-Control-Allow-Methods: "'GET,OPTIONS'"
-              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-              method.response.header.Access-Control-Allow-Origin: "'*'"
-              method.response.header.Access-Control-Allow-Credentials: "'true'"
-        passthroughBehavior: when_no_match
     get:
       operationId: listDevices
       summary: List devices
-      description: |
-        List IoT devices
+      description: List IoT devices
       responses:
         "200":
           description: Ok
-          headers:
-            Access-Control-Allow-Origin:
-              schema:
-                type: string
-            Access-Control-Allow-Methods:
-              schema:
-                type: string
-            Access-Control-Allow-Headers:
-              schema:
-                type: string
-            Access-Control-Allow-Credentials:
-              schema:
-                type: string
           content:
             application/json:
               schema:
@@ -82,12 +23,6 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "429":
-          $ref: "#/components/responses/TooManyRequests"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
       tags:
         - Devices
       security:
@@ -100,140 +35,40 @@ paths:
         - listDevices
 
   /download:
-      options:
-        summary: CORS support for download
-        description: Enable CORS by returning correct headers
-        responses:
-          '200':
-            description: CORS response
-            headers:
-              Access-Control-Allow-Origin:
-                schema:
-                  type: string
-              Access-Control-Allow-Methods:
-                schema:
-                  type: string
-              Access-Control-Allow-Headers:
-                schema:
-                  type: string
-              Access-Control-Allow-Credentials:
-                schema:
-                  type: string
-            content: {}
-        x-amazon-apigateway-integration:
-          type: mock
-          requestTemplates:
-            application/json: '{"statusCode": 200}'
-          responses:
-            default:
-              statusCode: "200"
-              responseParameters:
-                method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
-                method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                method.response.header.Access-Control-Allow-Origin: "'*'"
-                method.response.header.Access-Control-Allow-Credentials: "'true'"
-          passthroughBehavior: when_no_match
-      post:
-        operationId: Publish
-        summary: Publishes a MQTT message
-        description: |
-          Publishes a MQTT message to IoT device
-        responses:
-          "200":
-            description: Ok
-            headers:
-              Access-Control-Allow-Origin:
-                schema:
-                  type: string
-              Access-Control-Allow-Methods:
-                schema:
-                  type: string
-              Access-Control-Allow-Headers:
-                schema:
-                  type: string
-              Access-Control-Allow-Credentials:
-                schema:
-                  type: string
-            content:
-              application/json:
-                schema:
-                  $ref: "#/components/schemas/Download"
-          "401":
-            $ref: "#/components/responses/Unauthorized"
-          "403":
-            $ref: "#/components/responses/Forbidden"
-          "404":
-            $ref: "#/components/responses/NotFound"
-          "429":
-            $ref: "#/components/responses/TooManyRequests"
-          "500":
-            $ref: "#/components/responses/InternalServerError"
-        tags:
-          - Download
-        security:
-          - AvpAuthorizer: []
-        x-amazon-apigateway-integration:
-          uri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${download_lambda_arn}/invocations
-          httpMethod: POST
-          type: AWS_PROXY
-        x-permissions-actions:
-          - Publish
-
-  /role:
-    options:
-      summary: CORS support for role
-      description: Enable CORS by returning correct headers
-      responses:
-        '200':
-          description: CORS response
-          headers:
-            Access-Control-Allow-Origin:
-              schema:
-                type: string
-            Access-Control-Allow-Methods:
-              schema:
-                type: string
-            Access-Control-Allow-Headers:
-              schema:
-                type: string
-            Access-Control-Allow-Credentials:
-              schema:
-                type: string
-          content: {}
-      x-amazon-apigateway-integration:
-        type: mock
-        requestTemplates:
-          application/json: '{"statusCode": 200}'
-        responses:
-          default:
-            statusCode: "200"
-            responseParameters:
-              method.response.header.Access-Control-Allow-Methods: "'GET,OPTIONS'"
-              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-              method.response.header.Access-Control-Allow-Origin: "'*'"
-              method.response.header.Access-Control-Allow-Credentials: "'true'"
-        passthroughBehavior: when_no_match
-    get:
-      operationId: listRole
-      summary: List role for logged in user
-      description: |
-        List role for logged in user
+    post:
+      operationId: Publish
+      summary: Publishes a MQTT message
+      description: Publishes a MQTT message to IoT device
       responses:
         "200":
           description: Ok
-          headers:
-            Access-Control-Allow-Origin:
+          content:
+            application/json:
               schema:
-                type: string
-            Access-Control-Allow-Methods:
-              schema:
-                type: string
-            Access-Control-Allow-Headers:
-              schema:
-                type: string
-            Access-Control-Allow-Credentials:
-              schema:
-                type: string
+                $ref: "#/components/schemas/Download"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+      tags:
+        - Download
+      security:
+        - AvpAuthorizer: []
+      x-amazon-apigateway-integration:
+        uri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${download_lambda_arn}/invocations
+        httpMethod: POST
+        type: AWS_PROXY
+      x-permissions-actions:
+        - Publish
+
+  /role:
+    get:
+      operationId: listRole
+      summary: List role for logged in user
+      description: List role for logged in user
+      responses:
+        "200":
+          description: Ok
           content:
             application/json:
               schema:
@@ -242,12 +77,6 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "429":
-          $ref: "#/components/responses/TooManyRequests"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
       tags:
         - Role
       x-amazon-apigateway-integration:
@@ -259,12 +88,6 @@ paths:
 
 components:
   responses:
-    BadRequest:
-      description: 400 Bad Request
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/HttpError"
     Unauthorized:
       description: 401 Unauthorized
       content:
@@ -277,24 +100,7 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/HttpError"
-    TooManyRequests:
-      description: 429 Too Many Requests
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/HttpError"
-    NotFound:
-      description: 404 Not Found
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/HttpError"
-    InternalServerError:
-      description: 500 Internal Server Error
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/HttpError"
+
   schemas:
     HttpError:
       type: object
@@ -303,33 +109,6 @@ components:
       properties:
         message:
           type: string
-    RoleActions:
-      type: object
-      required:
-        - actions
-      properties:
-        actions:
-          type: array
-          items:
-            $ref: "#/components/schemas/Actions"
-    Actions:
-      type: string
-      enum:
-        - listRoleActions
-        - listDevices
-        - updateDevice
-        - listFiles
-        - getFile
-    Files:
-      type: object
-      required:
-        - keys
-      properties:
-        keys:
-          type: array
-          description: File object keys
-          items:
-            type: string
     Devices:
       type: object
       required:
@@ -343,13 +122,8 @@ components:
       type: object
       required:
         - roleNames
-    DownloadFileRequest:
+    Download:
       type: object
-      required:
-        - objectKey
-      properties:
-        objectKey:
-          type: string
 
   securitySchemes:
     AvpAuthorizer:
