@@ -12,8 +12,8 @@ cdk.out
 
 .DS_Store
 
+# virtual environment
 /venv
-cdk.context.json
 
 #outputs
 outputs.json
