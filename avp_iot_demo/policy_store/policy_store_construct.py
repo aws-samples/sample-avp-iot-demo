@@ -39,7 +39,8 @@ class AvpPolicyStore(Construct):
             policy_store_id=self._policy_store_id,
             principal_entity_type="AvpIotDemoApi::User",
         )
-
+        
+        # override is needed as no avaialble methods are available to add a group entity type
         identity_source.add_override(
             "Properties.Configuration.CognitoUserPoolConfiguration.GroupConfiguration",
             {"GroupEntityType": "AvpIotDemoApi::UserGroup"},
@@ -47,7 +48,8 @@ class AvpPolicyStore(Construct):
 
         # Ensure identity source is created after policy store
         identity_source.node.add_dependency(cfn_policy_store)
-
+        
+        # Manager policy statement
         manager_policy_statement = f"""permit (
             principal in AvpIotDemoApi::UserGroup::"{user_pool_id}|manager",
             action in [
@@ -93,7 +95,6 @@ class AvpPolicyStore(Construct):
         manager_policy.node.add_dependency(cfn_policy_store)
         operator_policy.node.add_dependency(cfn_policy_store)
 
-        # Output the policy store ID
         CfnOutput(
             self,
             "PolicyStoreId",

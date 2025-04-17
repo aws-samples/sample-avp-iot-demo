@@ -6,22 +6,12 @@ class Lambdas(Construct):
     def __init__(self, scope: Construct, id: str, policy_store_id: str, thing_name: str) -> None:
         super().__init__(scope, id)
 
-        # no longer needed, keeping it in case we change our minds
-        # layer = _lambda.LayerVersion(
-        #     self,
-        #     "AuthorizerLayer",
-        #     code=_lambda.Code.from_asset("lambdas/layers/python.zip"),
-        #     compatible_runtimes=[_lambda.Runtime.PYTHON_3_11],
-        #     description="JWT layer for Authorizer function",
-        # )
-
         self.authorizer_function = _lambda.Function(
             self,
             "AuthorizerFunction",
             runtime=_lambda.Runtime.PYTHON_3_11,
             handler="index.lambda_handler",
             code=_lambda.Code.from_asset("lambdas/authorizer"),
-            # layers=[layer],
             environment={
                 "POLICY_STORE_ID": policy_store_id,
                 "TOKEN_TYPE": "identityToken",

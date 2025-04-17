@@ -1,5 +1,5 @@
 # lib/cognito_construct.py
-from aws_cdk import CfnOutput, aws_cognito as cognito
+from aws_cdk import aws_cognito as cognito
 from constructs import Construct
 
 class CognitoConstruct(Construct):
@@ -44,7 +44,7 @@ class CognitoConstruct(Construct):
                     authorization_code_grant=True
                 ),
                 scopes=[cognito.OAuthScope.EMAIL, cognito.OAuthScope.OPENID, cognito.OAuthScope.PROFILE, cognito.OAuthScope.COGNITO_ADMIN],
-                callback_urls=["http://localhost:3000"],  # Don't think we need these 
+                callback_urls=["http://localhost:3000"],
                 logout_urls=["http://localhost:3000"]
             )
         )

@@ -20,7 +20,7 @@ export default function App() {
   const [apiData, setApiData] = useState<ApiResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [s3filePath, sets3FilePath] = useState("");
-  const [userRole, setUserRole] = useState<string>(""); // Separate state for user role
+  const [userRole, setUserRole] = useState<string>("");
 
   const makeAuthenticatedRequest = async (
     endpoint: string,
