@@ -2,47 +2,33 @@ from aws_cdk import Stack, CfnOutput, Fn
 from constructs import Construct
 
 
-from avp_iot_demo.apigateway_construct import AvpIotDemoApiGateway
 from avp_iot_demo.policy_store.policy_store_construct import AvpPolicyStore
-from avp_iot_demo.s3_construct import IoTDeviceFilesS3Bucket
-from avp_iot_demo.lambda_construct import Lambdas
-from avp_iot_demo.cognito_construct import CognitoConstruct
-
-import json
-from typing import Optional
-
-# def get_user_pool_id(config_path: str) -> Optional[str]:
-#     try:
-#         with open(config_path, 'r') as f:
-#             amplify_config = json.load(f)
-#             return amplify_config.get('auth', {}).get('user_pool_id')
-#     except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
-#         print(f"Error reading config file: {e}")
-#         return None
+from avp_iot_demo.constructs.apigateway_construct import AvpIotDemoApiGateway
+from avp_iot_demo.constructs.cognito_construct import CognitoConstruct
+from avp_iot_demo.constructs.lambda_construct import Lambdas
 
 class AvpIotDemoStack(Stack):
-    def __init__(self, scope: Construct, construct_id: str, config_path: str, **kwargs) -> None:
+    def __init__(
+        self, scope: Construct, construct_id: str, config_path: str, **kwargs
+    ) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        # Get user pool ID from config
-        # user_pool_id = get_user_pool_id(config_path)
-        # print(f"User Pool ID: {user_pool_id}")
-        # if not user_pool_id:
-        #     raise ValueError("Could not find user_pool_id in config file")
-        
         cognito = CognitoConstruct(self, "CognitoConstruct")
         user_pool_id = cognito.user_pool.user_pool_id
 
         policy_store = AvpPolicyStore(
-            self, 
-            "AvpIoTDemoPolicyStore", 
-            user_pool_id=user_pool_id 
+            self, "AvpIoTDemoPolicyStore", user_pool_id=user_pool_id
         )
 
         # Import thing name from IoT stack
         thing_name = Fn.import_value("IoTThingName-Export")
 
-        lambdas = Lambdas(self, "DemoLambdas", policy_store_id=policy_store.policy_store_id, thing_name=thing_name)
+        lambdas = Lambdas(
+            self,
+            "DemoLambdas",
+            policy_store_id=policy_store.policy_store_id,
+            thing_name=thing_name,
+        )
 
         apigateway = AvpIotDemoApiGateway(
             self,
@@ -50,10 +36,9 @@ class AvpIotDemoStack(Stack):
             cors_allow_origin="http://localhost:3000",
             devices_lambda_arn=lambdas.devices_integration_arn,  # For /devices endpoint
             download_lambda_arn=lambdas.download_integration_arn,  # For /download endpoint
-            role_lambda_arn=lambdas.role_integration_arn, # For /role endpoint
-            lambda_authorizer_arn=lambdas.authorizer_arn,
+            role_lambda_arn=lambdas.role_integration_arn,  # For /role endpoint
+            lambda_authorizer_arn=lambdas.authorizer_arn,  # protects /devices and /download enpoints
         )
-
 
         CfnOutput(
             self,
@@ -76,8 +61,7 @@ class AvpIotDemoStack(Stack):
             "CognitoUserPoolId",
             value=cognito.cognito_user_pool_id,
             description="User Pool ID",
-            export_name="CognitoUserPoolId"
-
+            export_name="CognitoUserPoolId",
         )
 
         CfnOutput(
@@ -85,17 +69,5 @@ class AvpIotDemoStack(Stack):
             "CognitoClientId",
             value=cognito.cognito_client_id,
             description="User Client ID",
-            export_name="CognitoClientId"
-
-        )
-
-        is_deploy_sample_files = bool(
-            self.node.try_get_context("mock-data/deploySampleIoTDeviceFilesToS3")
-            == "true"
-        )
-
-        IoTDeviceFilesS3Bucket(
-            self,
-            "AvpIotDemoDeviceFilesS3Bucket",
-            deploy_sample_files=is_deploy_sample_files,
+            export_name="CognitoClientId",
         )
