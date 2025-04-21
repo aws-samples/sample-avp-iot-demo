@@ -74,12 +74,14 @@ class IoTThingStack(Stack):
             }
         )
 
-        # Create IoT Thing
-        thing = iot.CfnThing(
-            self, "IoTThing",
-            thing_name="avp-iot-device"
-        )
+        # # Create IoT Thing
+        # thing = iot.CfnThing(
+        #     self, "IoTThing",
+        #     thing_name="avp-iot-device"
+        # )
 
+        thing_name="avp-iot-device"
+        
         # Lambda function for certificate creation
         lambda_path = os.path.join(os.path.dirname(__file__), "lambda")
         cert_handler = lambda_.Function(
@@ -89,9 +91,9 @@ class IoTThingStack(Stack):
             handler="create_cert.handler",
             code=lambda_.Code.from_asset(lambda_path),
             environment={
-                "CERTIFICATE_SSM_PARAM": f"/iot/{thing.thing_name}/certificate",
-                "PRIVATE_KEY_SSM_PARAM": f"/iot/{thing.thing_name}/private-key",
-                "PUBLIC_KEY_SSM_PARAM": f"/iot/{thing.thing_name}/public-key"
+                "CERTIFICATE_SSM_PARAM": f"/iot/{thing_name}/certificate",
+                "PRIVATE_KEY_SSM_PARAM": f"/iot/{thing_name}/private-key",
+                "PUBLIC_KEY_SSM_PARAM": f"/iot/{thing_name}/public-key"
             }
         )
 
@@ -102,7 +104,7 @@ class IoTThingStack(Stack):
                 "ssm:DeleteParameter"
             ],
             resources=[
-                f"arn:aws:ssm:{self.region}:{self.account}:parameter/iot/{thing.thing_name}/*"
+                f"arn:aws:ssm:{self.region}:{self.account}:parameter/iot/{thing_name}/*"
             ]
         ))
 
@@ -115,7 +117,15 @@ class IoTThingStack(Stack):
                 "iot:DetachPolicy",
                 "iot:DetachThingPrincipal",
                 "iot:UpdateCertificate",
-                "iot:DeleteCertificate"
+                "iot:DeleteCertificate",
+                "iot:DescribeCertificate",
+                "iot:ListAttachedPolicies",
+                "iot:ListPrincipalThings",
+                "iot:ListThingPrincipals",
+                "iot:DescribeThing",
+                "iot:DeleteThing",
+                # permissions to create IoT THing
+                "iot:CreateThing"
             ],
             resources=["*"]
         ))
@@ -132,7 +142,7 @@ class IoTThingStack(Stack):
         # Outputs
         CfnOutput(
             self, "ThingName",
-            value=thing.thing_name,
+            value=thing_name,
             description="IoT Thing Name",
             export_name="IoTThingName-Export"
         )
@@ -186,7 +196,7 @@ class IoTThingStack(Stack):
                 "ssm:GetParameter",
             ],
             resources=[
-                f"arn:aws:ssm:{self.region}:{self.account}:parameter/iot/{thing.thing_name}/*"
+                f"arn:aws:ssm:{self.region}:{self.account}:parameter/iot/{thing_name}/*"
             ]
         ))
 
@@ -225,11 +235,11 @@ class IoTThingStack(Stack):
             "curl -o /home/ec2-user/certs/AmazonRootCA1.pem https://www.amazontrust.com/repository/AmazonRootCA1.pem",
             
             # Get certificates from SSM and save them
-            f"""aws ssm get-parameter --name "/iot/{thing.thing_name}/certificate" --with-decryption --region {self.region} \
+            f"""aws ssm get-parameter --name "/iot/{thing_name}/certificate" --with-decryption --region {self.region} \
                 | jq -r '.Parameter.Value' > /home/ec2-user/certs/device.pem.crt""",
-            f"""aws ssm get-parameter --name "/iot/{thing.thing_name}/private-key" --with-decryption --region {self.region} \
+            f"""aws ssm get-parameter --name "/iot/{thing_name}/private-key" --with-decryption --region {self.region} \
                 | jq -r '.Parameter.Value' > /home/ec2-user/certs/private.pem.key""",
-            f"""aws ssm get-parameter --name "/iot/{thing.thing_name}/public-key" --with-decryption --region {self.region} \
+            f"""aws ssm get-parameter --name "/iot/{thing_name}/public-key" --with-decryption --region {self.region} \
                 | jq -r '.Parameter.Value' > /home/ec2-user/certs/public.pem.key""",
             
             # Download and extract device code

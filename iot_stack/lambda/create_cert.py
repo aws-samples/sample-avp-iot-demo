@@ -27,6 +27,18 @@ def handler(event, context):
         if request_type in ['Create', 'Update']:
             iot = boto3.client('iot')
             
+            # Create IoT thing first
+            try:
+                # Check if thing already exists
+                iot.describe_thing(thingName='avp-iot-device')
+                logger.info("Thing 'avp-iot-device' already exists")
+            except iot.exceptions.ResourceNotFoundException:
+                # Create the thing if it doesn't exist
+                thing_response = iot.create_thing(
+                    thingName='avp-iot-device',
+                )
+                logger.info("Created new IoT thing: %s", thing_response['thingName'])
+            
             # Create certificate
             cert_response = iot.create_keys_and_certificate(setAsActive=True)
             
@@ -69,10 +81,12 @@ def handler(event, context):
                 'certificateId': cert_response['certificateId'],
                 'certificateParameter': cert_param_name,
                 'privateKeyParameter': private_key_param_name,
-                'publicKeyParameter': public_key_param_name
+                'publicKeyParameter': public_key_param_name,
+                'thingName': 'avp-iot-device'
             }
             
             physical_id = cert_response['certificateArn']
+
             
         elif request_type == 'Delete':
             if physical_id != 'NotYetCreated':
@@ -130,10 +144,18 @@ def handler(event, context):
                             ssm.delete_parameter(Name=param_name)
                         except ssm.exceptions.ParameterNotFound:
                             pass
+                            
+                    # Delete the IoT thing as the last step
+                    try:
+                        iot.delete_thing(thingName='avp-iot-device')
+                        logger.info("Successfully deleted IoT thing 'avp-iot-device'")
+                    except Exception as e:
+                        logger.error(f"Error deleting IoT thing: {str(e)}")
 
                 except Exception as e:
                     logger.error(f"Error during cleanup: {str(e)}")
                     raise Exception(f"Failed to clean up resources: {str(e)}")
+
 
         
         response = {
