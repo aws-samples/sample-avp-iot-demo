@@ -180,4 +180,4 @@ Once it’s done running, start the development server with:
 npm run dev
 ```
 
-The command will open up a server on port 3000. From your broiwser, navigate to http://localhost:3000/ to view the app. 
+The command will open up a server on port 3000. From your browser, navigate to http://localhost:3000/ to view the app. 
