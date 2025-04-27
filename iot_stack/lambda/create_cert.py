@@ -1,5 +1,3 @@
-# your_project/lambda/create_cert.py
-
 import boto3
 import json
 import urllib3
@@ -19,6 +17,8 @@ def handler(event, context):
     cert_param_name = os.environ['CERTIFICATE_SSM_PARAM']
     private_key_param_name = os.environ['PRIVATE_KEY_SSM_PARAM']
     public_key_param_name = os.environ['PUBLIC_KEY_SSM_PARAM']
+    thing_name = os.environ['THING_NAME']
+    policy_name = f"{thing_name}-policy"
     
     try:
         response_data = {}
@@ -30,12 +30,12 @@ def handler(event, context):
             # Create IoT thing first
             try:
                 # Check if thing already exists
-                iot.describe_thing(thingName='avp-iot-device')
-                logger.info("Thing 'avp-iot-device' already exists")
+                iot.describe_thing(thingName=thing_name)
+                logger.info(f"Thing '{thing_name}' already exists")
             except iot.exceptions.ResourceNotFoundException:
                 # Create the thing if it doesn't exist
                 thing_response = iot.create_thing(
-                    thingName='avp-iot-device',
+                    thingName=thing_name,
                 )
                 logger.info("Created new IoT thing: %s", thing_response['thingName'])
             
@@ -66,13 +66,13 @@ def handler(event, context):
             
             # Attach policy to certificate
             iot.attach_policy(
-                policyName='avp-iot-policy',
+                policyName=policy_name,
                 target=cert_response['certificateArn']
             )
             
             # Attach thing to certificate
             iot.attach_thing_principal(
-                thingName='avp-iot-device',
+                thingName=thing_name,
                 principal=cert_response['certificateArn']
             )
             
@@ -82,7 +82,7 @@ def handler(event, context):
                 'certificateParameter': cert_param_name,
                 'privateKeyParameter': private_key_param_name,
                 'publicKeyParameter': public_key_param_name,
-                'thingName': 'avp-iot-device'
+                'thingName': thing_name
             }
             
             physical_id = cert_response['certificateArn']
@@ -97,14 +97,14 @@ def handler(event, context):
                 try:
                     # First list all principals attached to the thing
                     principals = iot.list_thing_principals(
-                        thingName='avp-iot-device'
+                        thingName=thing_name
                     )['principals']
 
                     # Detach all principals from the thing
                     for principal in principals:
                         try:
                             iot.detach_thing_principal(
-                                thingName='avp-iot-device',
+                                thingName=thing_name,
                                 principal=principal
                             )
                             logger.info(f"Successfully detached principal {principal} from thing")
@@ -147,8 +147,8 @@ def handler(event, context):
                             
                     # Delete the IoT thing as the last step
                     try:
-                        iot.delete_thing(thingName='avp-iot-device')
-                        logger.info("Successfully deleted IoT thing 'avp-iot-device'")
+                        iot.delete_thing(thingName=thing_name)
+                        logger.info(f"Successfully deleted IoT thing '{thing_name}'")
                     except Exception as e:
                         logger.error(f"Error deleting IoT thing: {str(e)}")
 

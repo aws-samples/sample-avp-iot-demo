@@ -3,7 +3,7 @@ from constructs import Construct
 
 
 class Lambdas(Construct):
-    def __init__(self, scope: Construct, id: str, policy_store_id: str, thing_name: str) -> None:
+    def __init__(self, scope: Construct, id: str, policy_store_id: str, thing_name: str,iot_topic:str) -> None:
         super().__init__(scope, id)
 
         self.authorizer_function = _lambda.Function(
@@ -35,6 +35,7 @@ class Lambdas(Construct):
             code=_lambda.Code.from_asset("lambdas/integration"),
             environment={
                 "IOT_THING_NAME": thing_name,
+                "IOT_TOPIC": iot_topic
             },
         )
 
