@@ -15,6 +15,7 @@ def lambda_handler(event, context):
     print(f"Extracted s3Path: {s3Path}")
     
     iotDevice = os.environ['IOT_THING_NAME']
+    topic_name = os.environ['IOT_TOPIC']
     
     timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%SZ')
     
@@ -28,7 +29,7 @@ def lambda_handler(event, context):
     
     try:
         response = iot_client.publish(
-            topic='my/custom/topic',  # Adjust for IoT topic
+            topic=topic_name,  # Adjust for IoT topic
             qos=1,
             payload=json.dumps(message)
         )

@@ -22,12 +22,14 @@ class AvpIotDemoStack(Stack):
 
         # Import thing name from IoT stack
         thing_name = Fn.import_value("IoTThingName-Export")
+        iot_topic = Fn.import_value("IoTTopicName-Export")
 
         lambdas = Lambdas(
             self,
             "DemoLambdas",
             policy_store_id=policy_store.policy_store_id,
             thing_name=thing_name,
+            iot_topic=iot_topic,
         )
 
         apigateway = AvpIotDemoApiGateway(

@@ -12,8 +12,11 @@ from aws_cdk import (
     custom_resources as cr,
     CfnParameter,
     aws_s3_assets as assets,
-    Duration
+    Duration,
+    Aspects
 )
+from cdk_nag import NagSuppressions, NagPackSuppression
+
 from constructs import Construct
 import os
 
@@ -53,49 +56,101 @@ class IoTThingStack(Stack):
             default="my/topic/name"
         )
 
-        # Define the IoT Policy
+        # Define thing name as a parameter
+        thing_name_parameter = CfnParameter(
+            self, "ThingName",
+            type="String",
+            description="Name of the IoT Thing",
+            default="avp-iot-device"
+        )
+
+        # Use the parameter throughout the code
+        thing_name = thing_name_parameter.value_as_string
+
+
+        # Define the IoT Policy with more specific resources
         iot_policy = iot.CfnPolicy(
             self, "IoTPolicy",
-            policy_name="avp-iot-policy",
+            policy_name=f"{thing_name}-policy",
             policy_document={
                 "Version": "2012-10-17",
                 "Statement": [
                     {
                         "Effect": "Allow",
                         "Action": [
-                            "iot:Connect",
-                            "iot:Publish",
-                            "iot:Subscribe",
+                            "iot:Connect"
+                        ],
+                        "Resource": [f"arn:aws:iot:{self.region}:{self.account}:client/{thing_name}"]
+                    },
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "iot:Publish"
+                        ],
+                        "Resource": [f"arn:aws:iot:{self.region}:{self.account}:topic/{topic_parameter.value_as_string}"]
+                    },
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "iot:Subscribe"
+                        ],
+                        "Resource": [f"arn:aws:iot:{self.region}:{self.account}:topicfilter/{topic_parameter.value_as_string}"]
+                    },
+                    {
+                        "Effect": "Allow",
+                        "Action": [
                             "iot:Receive"
                         ],
-                        "Resource": ["*"]
+                        "Resource": [f"arn:aws:iot:{self.region}:{self.account}:topic/{topic_parameter.value_as_string}"]
                     }
                 ]
             }
         )
 
-        # # Create IoT Thing
-        # thing = iot.CfnThing(
-        #     self, "IoTThing",
-        #     thing_name="avp-iot-device"
-        # )
 
-        thing_name="avp-iot-device"
+
+
+        
         
         # Lambda function for certificate creation
         lambda_path = os.path.join(os.path.dirname(__file__), "lambda")
         cert_handler = lambda_.Function(
             self, "CreateCertLambda",
-            runtime=lambda_.Runtime.PYTHON_3_9,
-            timeout=Duration.minutes(3),
+            runtime=lambda_.Runtime.PYTHON_3_12,
+            timeout=Duration.minutes(5),
             handler="create_cert.handler",
             code=lambda_.Code.from_asset(lambda_path),
             environment={
                 "CERTIFICATE_SSM_PARAM": f"/iot/{thing_name}/certificate",
                 "PRIVATE_KEY_SSM_PARAM": f"/iot/{thing_name}/private-key",
-                "PUBLIC_KEY_SSM_PARAM": f"/iot/{thing_name}/public-key"
-            }
+                "PUBLIC_KEY_SSM_PARAM": f"/iot/{thing_name}/public-key",
+                "THING_NAME": thing_name
+            },
+            # Disable the default role creation with managed policy
+            role=iam.Role(
+                self, "CreateCertLambdaRole",
+                assumed_by=iam.ServicePrincipal("lambda.amazonaws.com"),
+                inline_policies={
+                    "CloudWatchLogsPolicy": iam.PolicyDocument(
+                        statements=[
+                            iam.PolicyStatement(
+                                actions=[
+                                    "logs:CreateLogGroup",
+                                    "logs:CreateLogStream",
+                                    "logs:PutLogEvents"
+                                ],
+                                resources=[
+                                    f"arn:aws:logs:{self.region}:{self.account}:log-group:/aws/lambda/*"
+                                ]
+                            )
+                        ]
+                    )
+                }
+            )
         )
+
+
+
 
         # Add SSM permissions to Lambda
         cert_handler.add_to_role_policy(iam.PolicyStatement(
@@ -108,27 +163,69 @@ class IoTThingStack(Stack):
             ]
         ))
 
-        # Add IoT permissions to Lambda
+
+
+
+        # Add IoT permissions to Lambda with more specific resource scoping
         cert_handler.add_to_role_policy(iam.PolicyStatement(
             actions=[
-                "iot:CreateKeysAndCertificate",
+                "iot:CreateKeysAndCertificate"
+            ],
+            resources=["*"]  # This specific API doesn't support resource-level permissions
+        ))
+
+
+
+        # Add IoT permissions with resource-level restrictions
+        cert_handler.add_to_role_policy(iam.PolicyStatement(
+            actions=[
                 "iot:AttachPolicy",
+                "iot:DetachPolicy"
+            ],
+            resources=[
+                f"arn:aws:iot:{self.region}:{self.account}:policy/{thing_name}-policy",
+                 f"arn:aws:iot:{self.region}:{self.account}:cert/*"
+            ]
+        ))
+
+        cert_handler.add_to_role_policy(iam.PolicyStatement(
+            actions=[
                 "iot:AttachThingPrincipal",
-                "iot:DetachPolicy",
                 "iot:DetachThingPrincipal",
-                "iot:UpdateCertificate",
-                "iot:DeleteCertificate",
-                "iot:DescribeCertificate",
-                "iot:ListAttachedPolicies",
-                "iot:ListPrincipalThings",
-                "iot:ListThingPrincipals",
                 "iot:DescribeThing",
                 "iot:DeleteThing",
-                # permissions to create IoT THing
                 "iot:CreateThing"
             ],
-            resources=["*"]
+            resources=[
+                f"arn:aws:iot:{self.region}:{self.account}:thing/{thing_name}"
+            ]
         ))
+
+        cert_handler.add_to_role_policy(iam.PolicyStatement(
+            actions=[
+                "iot:UpdateCertificate",
+                "iot:DeleteCertificate",
+                "iot:DescribeCertificate"
+            ],
+            resources=[
+                f"arn:aws:iot:{self.region}:{self.account}:cert/*"
+            ]
+        ))
+
+
+
+        cert_handler.add_to_role_policy(iam.PolicyStatement(
+            actions=[
+                "iot:ListAttachedPolicies",
+                "iot:ListPrincipalThings",
+                "iot:ListThingPrincipals"
+            ],
+            resources=[
+                f"arn:aws:iot:{self.region}:{self.account}:*"
+            ]
+        ))
+
+
 
         # Create custom resource
         cert_resource = CustomResource(
@@ -139,9 +236,12 @@ class IoTThingStack(Stack):
             ).service_token
         )
 
+
+
+
         # Outputs
         CfnOutput(
-            self, "ThingName",
+            self, "ThingNameOutput",
             value=thing_name,
             description="IoT Thing Name",
             export_name="IoTThingName-Export"
@@ -184,6 +284,8 @@ class IoTThingStack(Stack):
             ]
         )
 
+
+
         # Create EC2 Role
         ec2_role = iam.Role(
             self, "EC2Role",
@@ -200,8 +302,12 @@ class IoTThingStack(Stack):
             ]
         ))
 
+
+
+
         # Add S3 permissions using the parameter
-        ec2_role.add_to_policy(iam.PolicyStatement(
+        s3_policy = iam.PolicyStatement(
+            sid="S3BucketAccess",  # Add a statement ID for better identification
             actions=[
                 "s3:GetObject",
                 "s3:ListBucket"
@@ -210,15 +316,22 @@ class IoTThingStack(Stack):
                 f"arn:aws:s3:::{bucket_parameter.value_as_string}",
                 f"arn:aws:s3:::{bucket_parameter.value_as_string}/*"
             ]
-        ))
+        )
+        ec2_role.add_to_policy(s3_policy)
+
+
 
         # get AWS IoT endpoint
+       
         ec2_role.add_to_policy(iam.PolicyStatement(
             actions=[
                 "iot:DescribeEndpoint"
             ],
-            resources=["*"]
+            resources=["*"],
+            sid="AllowIoTDescribeEndpoint"  # Add a statement ID for better identification
         ))
+
+
 
         # Create User Data script to set up certificates
         # Modify user data to include downloading files from S3
@@ -246,7 +359,7 @@ class IoTThingStack(Stack):
             f"aws s3 cp {device_code.s3_object_url} /tmp/device_code.zip",
             "cd /home/ec2-user/device_code && unzip -o /tmp/device_code.zip",
             "rm /tmp/device_code.zip",
-            f"export AWS_DEFAULT_REGION={self.region}"
+            f"export AWS_DEFAULT_REGION={self.region}",
             
             # Set proper ownership and permissions
             "chown -R ec2-user:ec2-user /home/ec2-user/certs",
@@ -257,31 +370,9 @@ class IoTThingStack(Stack):
             # Install Python requirements if requirements.txt exists
             "if [ -f /home/ec2-user/device_code/requirements.txt ]; then",
             "pip3 install -r /home/ec2-user/device_code/requirements.txt",
-            "pip3 install awsiotsdk --ignore-installed awscrt"
-            "pip3 install boto3"
+            "pip3 install awsiotsdk --ignore-installed awscrt",
+            "pip3 install boto3",
             "fi",
-            
-            # # Create systemd service for the subscriber
-            # f"""cat << 'EOF' > /etc/systemd/system/iot-subscriber.service
-            #         [Unit]
-            #         Description=IoT Subscriber Service
-            #         After=network.target
-
-            #         [Service]
-            #         Type=simple
-            #         User=ec2-user
-            #         WorkingDirectory=/home/ec2-user/device_code
-            #         ExecStart=/usr/bin/python3 /home/ec2-user/device_code/local_subscribe.py --topic "{topic_parameter.value_as_string}"
-            #         Restart=always
-            #         RestartSec=5
-
-            #         [Install]
-            #         WantedBy=multi-user.target
-            #         EOF""",
-
-            #                 # Enable and start the service
-            #                 "systemctl enable iot-subscriber",
-            #                 "systemctl start iot-subscriber"
                         )
 
         
@@ -304,6 +395,8 @@ class IoTThingStack(Stack):
             ),
         )
 
+
+
         # Grant S3 read permissions to EC2 role for the asset bucket
         device_code.grant_read(instance.role)
 
@@ -325,6 +418,13 @@ class IoTThingStack(Stack):
             self, "InstancePublicIP",
             value=instance.instance_public_ip,
             description="EC2 Instance Public IP"
+        )
+
+        CfnOutput(
+            self, "TopicNameOutput",
+            value=topic_parameter.value_as_string,
+            description="IoT Topic Name",
+            export_name="IoTTopicName-Export"
         )
 
         # CfnOutput(

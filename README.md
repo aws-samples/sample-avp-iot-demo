@@ -59,8 +59,15 @@ Enjoy!
 
 # IoT Thing Stack Deployment Guide
 
-## Overview
-This document describes how to deploy the IoT Thing Stack using AWS CDK (Cloud Development Kit). The stack creates necessary AWS IoT resources with specific configurations for security and messaging.
+## Architecture Overview
+
+This stack deploys:
+1. An AWS IoT Thing with certificates and policies
+2. An EC2 instance that acts as an IoT device
+3. Necessary IAM roles and permissions
+4. Integration with an S3 bucket for file storage
+
+The EC2 instance runs a Python script that connects to AWS IoT Core as a device, subscribes to the specified MQTT topic, and processes incoming messages. For security, SSH access to this EC2 instance is restricted to the IP address specified in the `SSHAccessIP` parameter.
 
 ## Prerequisites
 - AWS CDK CLI installed
@@ -69,28 +76,32 @@ This document describes how to deploy the IoT Thing Stack using AWS CDK (Cloud D
 - Sufficient AWS permissions to create IoT resources
 
 ## Deployment Command
+**Note: This stack does not create an S3 bucket, you need to create a bucket before deploying this stack**
 ```bash
 cdk deploy IoTThingStack \
   --parameters SSHAccessIP=10.0.0.100/32 \
   --parameters BucketName=iot-download-bucket \
-  --parameters TopicName=my/custom/topic
-```
+  --parameters TopicName=my/custom/topic \
+  --parameters ThingName=avp-iot-device
+
 
 ## Parameters Explanation
 
 | Parameter | Value | Description |
 |-----------|--------|-------------|
-| `SSHAccessIP` | `10.0.0.100/32` | Specifies the IP address range for SSH access. The `/32` suffix indicates a single IP address. Used to restrict SSH connections to a specific source IP for security. |
-| `BucketName` | `iot-download-bucket` | Name of the S3 bucket to be created/used for IoT file storage. Must be globally unique across all AWS accounts. Used for storing IoT-related files and data. |
+| `SSHAccessIP` | `10.0.0.100/32` | Specifies the IP address range allowed to SSH into the EC2 instance that acts as an IoT device. The `/32` suffix indicates a single IP address. For security, this should be your current public IP address. |
+| `BucketName` | `iot-download-bucket` | Name of the S3 bucket to be used for IoT file storage. Must be globally unique across all AWS accounts. Used for storing IoT-related files and data. |
 | `TopicName` | `my/custom/topic` | MQTT topic name for IoT message routing. Uses forward slashes (`/`) for topic hierarchy. Defines the message path for publishing and subscribing IoT devices. |
+| `ThingName` | `avp-iot-device` | Name of the IoT Thing to be created. This will be the identity of your IoT device in AWS IoT Core. |
 
 ### Parameter Usage Notes
 
 #### SSHAccessIP
-- Must be in CIDR notation
-- Use `/32` for single IP address
-- Can be updated if source IP changes
-- Critical for security access control
+- Must be in CIDR notation (e.g., `203.0.113.1/32`)
+- Use `/32` for a single IP address
+- Should be set to your current public IP address to allow SSH access to the EC2 IoT device
+- Can be updated if your source IP changes
+- Critical for security - restricts SSH access to only your IP address
 
 #### BucketName
 - Must be all lowercase
@@ -106,6 +117,11 @@ cdk deploy IoTThingStack \
 - Used in IoT message routing
 - Follows MQTT topic naming conventions
 - Supports wildcards in subscriptions
+
+#### ThingName
+- Unique identifier for your IoT device
+- Used to create device certificates and policies
+- Will appear in AWS IoT Core console
 
 # Running the IoT Subscriber
 
