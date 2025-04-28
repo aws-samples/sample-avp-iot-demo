@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
-import os
-
 import aws_cdk as cdk
-from cdk_nag import AwsSolutionsChecks, NagSuppressions, NagPackSuppression
+from cdk_nag import AwsSolutionsChecks, NagSuppressions
 
 from avp_iot_demo.avp_iot_demo_stack import AvpIotDemoStack
 from iot_stack.ec2_iot_device import IoTThingStack
