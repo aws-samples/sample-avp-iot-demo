@@ -9,7 +9,7 @@ from iot_stack.ec2_iot_device import IoTThingStack
 
 app = cdk.App()
 iot_stack = IoTThingStack(app, "IoTThingStack")
-AvpIotDemoStack(app, "AvpIotDemoStack", config_path="web_app/amplify_outputs.json")
+avp_stack = AvpIotDemoStack(app, "AvpIotDemoStack", config_path="web_app/amplify_outputs.json")
 # Add CDK Nag to all stacks in the app
 cdk.Aspects.of(app).add(AwsSolutionsChecks())
 
@@ -150,7 +150,146 @@ NagSuppressions.add_stack_suppressions(
     ]
 )
 
+# Suppressions for AVP stack
+NagSuppressions.add_resource_suppressions_by_path(
+    avp_stack,
+    "/AvpIotDemoStack/AvpIotDemoApi/AvpIotDemoApi/DeploymentStage.dev/Resource",
+    [
+        {
+            "id": "AwsSolutions-APIG6",
+            "reason": "CloudWatch logging for all methods not required for demo environment"
+        }
+    ]
+)
 
+# Suppress Lambda runtime warnings for all Lambda functions in AvpIotDemoStack
+NagSuppressions.add_resource_suppressions_by_path(
+    avp_stack,
+    "/AvpIotDemoStack/DemoLambdas/AuthorizerFunction/Resource",
+    [
+        {
+            "id": "AwsSolutions-L1",
+            "reason": "Using stable Python runtime for Lambda functions"
+        }
+    ]
+)
 
+NagSuppressions.add_resource_suppressions_by_path(
+    avp_stack,
+    "/AvpIotDemoStack/DemoLambdas/DevicesIntegrationFunction/Resource",
+    [
+        {
+            "id": "AwsSolutions-L1",
+            "reason": "Using stable Python runtime for Lambda functions"
+        }
+    ]
+)
+
+NagSuppressions.add_resource_suppressions_by_path(
+    avp_stack,
+    "/AvpIotDemoStack/DemoLambdas/DownloadIntegrationFunction/Resource",
+    [
+        {
+            "id": "AwsSolutions-L1",
+            "reason": "Using stable Python runtime for Lambda functions"
+        }
+    ]
+)
+
+NagSuppressions.add_resource_suppressions_by_path(
+    avp_stack,
+    "/AvpIotDemoStack/DemoLambdas/RoleIntegrationFunction/Resource",
+    [
+        {
+            "id": "AwsSolutions-L1",
+            "reason": "Using stable Python runtime for Lambda functions"
+        }
+    ]
+)
+
+NagSuppressions.add_resource_suppressions_by_path(
+    avp_stack,
+    "/AvpIotDemoStack/DemoLambdas/AuthorizerRole/DefaultPolicy/Resource",
+    [
+        {
+            "id": "AwsSolutions-IAM5",
+            "reason": "CloudWatch Logs permissions require wildcard for Lambda log groups",
+            "appliesTo": [
+                "Resource::arn:aws:logs:<AWS::Region>:<AWS::AccountId>:log-group:/aws/lambda/AuthorizerFunction*"
+            ]
+        }
+    ]
+)
+
+NagSuppressions.add_resource_suppressions_by_path(
+    avp_stack,
+    "/AvpIotDemoStack/DemoLambdas/DevicesRole/DefaultPolicy/Resource",
+    [
+        {
+            "id": "AwsSolutions-IAM5",
+            "reason": "IoT ListThings operation requires wildcard permissions as it operates across multiple resource types",
+            "appliesTo": [
+                "Resource::arn:aws:iot:<AWS::Region>:<AWS::AccountId>:*"
+            ]
+        },
+        {
+            "id": "AwsSolutions-IAM5",
+            "reason": "CloudWatch Logs permissions require wildcard for Lambda log groups",
+            "appliesTo": [
+                "Resource::arn:aws:logs:<AWS::Region>:<AWS::AccountId>:log-group:/aws/lambda/DevicesIntegrationFunction*"
+            ]
+        }
+    ]
+)
+
+NagSuppressions.add_resource_suppressions_by_path(
+    avp_stack,
+    "/AvpIotDemoStack/DemoLambdas/DownloadRole/DefaultPolicy/Resource",
+    [
+        {
+            "id": "AwsSolutions-IAM5",
+            "reason": "CloudWatch Logs permissions require wildcard for Lambda log groups",
+            "appliesTo": [
+                "Resource::arn:aws:logs:<AWS::Region>:<AWS::AccountId>:log-group:/aws/lambda/DownloadIntegrationFunction*"
+            ]
+        }
+    ]
+)
+
+NagSuppressions.add_resource_suppressions_by_path(
+    avp_stack,
+    "/AvpIotDemoStack/DemoLambdas/RoleIntegrationRole/DefaultPolicy/Resource",
+    [
+        {
+            "id": "AwsSolutions-IAM5",
+            "reason": "CloudWatch Logs permissions require wildcard for Lambda log groups",
+            "appliesTo": [
+                "Resource::arn:aws:logs:<AWS::Region>:<AWS::AccountId>:log-group:/aws/lambda/RoleIntegrationFunction*"
+            ]
+        }
+    ]
+)
+
+NagSuppressions.add_resource_suppressions_by_path(
+    avp_stack,
+    "/AvpIotDemoStack/CognitoConstruct/UserPool/Resource",
+    [
+        {
+            "id": "AwsSolutions-COG3",
+            "reason": "Advanced Security Mode not required for demo environment"
+        }
+    ]
+)
+
+NagSuppressions.add_resource_suppressions_by_path(
+    avp_stack,
+    "/AvpIotDemoStack/AvpIotDemoApi/AvpIotDemoApi/Resource",
+    [
+        {
+            "id": "AwsSolutions-APIG2",
+            "reason": "Request validation not required for demo environment"
+        }
+    ]
+)
 
 app.synth()

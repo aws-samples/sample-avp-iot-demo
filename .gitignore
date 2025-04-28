@@ -17,3 +17,5 @@ cdk.out
 
 #outputs
 outputs.json
+
+ash_output/*

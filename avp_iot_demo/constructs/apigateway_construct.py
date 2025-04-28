@@ -4,6 +4,8 @@ from types import SimpleNamespace
 from typing import Any
 from aws_cdk import (
     aws_apigateway as apigateway,
+    aws_logs as logs,
+    RemovalPolicy,
 )
 from constructs import Construct
 
@@ -31,6 +33,15 @@ class AvpIotDemoApiGateway(Construct):
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
+        # Create CloudWatch Logs group for API Gateway access logs
+        log_group = logs.LogGroup(
+            self,
+            "ApiGatewayAccessLogs",
+            log_group_name=f"/aws/apigateway/AvpIotDemoApi-access-logs",
+            retention=logs.RetentionDays.ONE_WEEK,
+            removal_policy=RemovalPolicy.DESTROY
+        )
+
         # Get the OpenAPI spec from a YAML template as a dictionary
         openapi_spec = self.__get_openapi_spec(
             f'{os.path.join(os.path.dirname(__file__), "openapi-spec.yaml")}',
@@ -48,6 +59,12 @@ class AvpIotDemoApiGateway(Construct):
             self,
             "AvpIotDemoApi",
             api_definition=apigateway.ApiDefinition.from_inline(openapi_spec),
+            # Enable access logging to the CloudWatch Logs group
+            deploy_options=apigateway.StageOptions(
+                stage_name="dev",
+                access_log_destination=apigateway.LogGroupLogDestination(log_group),
+                access_log_format=apigateway.AccessLogFormat.clf(),
+            ),
         )
 
     @property
