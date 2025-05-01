@@ -23,11 +23,65 @@ def handler(event, context):
     try:
         response_data = {}
         ssm = boto3.client('ssm')
+        iot = boto3.client('iot')
         
         if request_type in ['Create', 'Update']:
-            iot = boto3.client('iot')
+            # Create IoT policy first
+            try:
+                # Check if policy already exists
+                iot.get_policy(policyName=policy_name)
+                logger.info(f"Policy '{policy_name}' already exists")
+            except iot.exceptions.ResourceNotFoundException:
+                # Create the policy if it doesn't exist
+                # Get the AWS region and account ID from the Lambda context
+                region = context.invoked_function_arn.split(":")[3]
+                account_id = context.invoked_function_arn.split(":")[4]
+                
+                # Get the topic name from environment variable or use a default
+                # In a real implementation, you might want to pass this as a parameter
+                topic = os.environ.get('IOT_TOPIC', 'my/topic/name')
+                
+                policy_document = {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Action": [
+                                "iot:Connect"
+                            ],
+                            "Resource": [f"arn:aws:iot:{region}:{account_id}:client/{thing_name}"]
+                        },
+                        {
+                            "Effect": "Allow",
+                            "Action": [
+                                "iot:Publish"
+                            ],
+                            "Resource": [f"arn:aws:iot:{region}:{account_id}:topic/{topic}"]
+                        },
+                        {
+                            "Effect": "Allow",
+                            "Action": [
+                                "iot:Subscribe"
+                            ],
+                            "Resource": [f"arn:aws:iot:{region}:{account_id}:topicfilter/{topic}"]
+                        },
+                        {
+                            "Effect": "Allow",
+                            "Action": [
+                                "iot:Receive"
+                            ],
+                            "Resource": [f"arn:aws:iot:{region}:{account_id}:topic/{topic}"]
+                        }
+                    ]
+                }
+                
+                policy_response = iot.create_policy(
+                    policyName=policy_name,
+                    policyDocument=json.dumps(policy_document)
+                )
+                logger.info(f"Created new IoT policy: {policy_name}")
             
-            # Create IoT thing first
+            # Create IoT thing
             try:
                 # Check if thing already exists
                 iot.describe_thing(thingName=thing_name)
@@ -90,7 +144,6 @@ def handler(event, context):
             
         elif request_type == 'Delete':
             if physical_id != 'NotYetCreated':
-                iot = boto3.client('iot')
                 cert_arn = physical_id
                 cert_id = cert_arn.split('/')[-1]
 
@@ -122,6 +175,16 @@ def handler(event, context):
                                 policyName=policy['policyName'],
                                 target=cert_arn
                             )
+                            
+                            # Delete the policy
+                            try:
+                                iot.delete_policy(
+                                    policyName=policy['policyName']
+                                )
+                                logger.info(f"Successfully deleted policy {policy['policyName']}")
+                            except Exception as e:
+                                logger.error(f"Error deleting policy {policy['policyName']}: {str(e)}")
+                                
                     except Exception as e:
                         logger.error(f"Error detaching policies: {str(e)}")
 
