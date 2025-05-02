@@ -155,7 +155,6 @@ tail -f subscriber.log
 
 Deploy AVP stack containing API gateway, Lambda functions, Cognito, and AVP reosurces with the following command:
 
-cdk deploy AvpPolicyStore
 ```bash
 cdk deploy AvpIotDemoStack
 ```
