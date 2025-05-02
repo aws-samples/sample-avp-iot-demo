@@ -13,7 +13,8 @@ from aws_cdk import (
     CfnParameter,
     aws_s3_assets as assets,
     Duration,
-    Aspects
+    Aspects,
+    RemovalPolicy
 )
 from cdk_nag import NagSuppressions, NagPackSuppression
 
@@ -68,44 +69,44 @@ class IoTThingStack(Stack):
         thing_name = thing_name_parameter.value_as_string
 
 
-        # Define the IoT Policy with more specific resources
-        iot_policy = iot.CfnPolicy(
-            self, "IoTPolicy",
-            policy_name=f"{thing_name}-policy",
-            policy_document={
-                "Version": "2012-10-17",
-                "Statement": [
-                    {
-                        "Effect": "Allow",
-                        "Action": [
-                            "iot:Connect"
-                        ],
-                        "Resource": [f"arn:aws:iot:{self.region}:{self.account}:client/{thing_name}"]
-                    },
-                    {
-                        "Effect": "Allow",
-                        "Action": [
-                            "iot:Publish"
-                        ],
-                        "Resource": [f"arn:aws:iot:{self.region}:{self.account}:topic/{topic_parameter.value_as_string}"]
-                    },
-                    {
-                        "Effect": "Allow",
-                        "Action": [
-                            "iot:Subscribe"
-                        ],
-                        "Resource": [f"arn:aws:iot:{self.region}:{self.account}:topicfilter/{topic_parameter.value_as_string}"]
-                    },
-                    {
-                        "Effect": "Allow",
-                        "Action": [
-                            "iot:Receive"
-                        ],
-                        "Resource": [f"arn:aws:iot:{self.region}:{self.account}:topic/{topic_parameter.value_as_string}"]
-                    }
-                ]
-            }
-        )
+        # # Define the IoT Policy with more specific resources
+        # iot_policy = iot.CfnPolicy(
+        #     self, "IoTPolicy",
+        #     policy_name=f"{thing_name}-policy",
+        #     policy_document={
+        #         "Version": "2012-10-17",
+        #         "Statement": [
+        #             {
+        #                 "Effect": "Allow",
+        #                 "Action": [
+        #                     "iot:Connect"
+        #                 ],
+        #                 "Resource": [f"arn:aws:iot:{self.region}:{self.account}:client/{thing_name}"]
+        #             },
+        #             {
+        #                 "Effect": "Allow",
+        #                 "Action": [
+        #                     "iot:Publish"
+        #                 ],
+        #                 "Resource": [f"arn:aws:iot:{self.region}:{self.account}:topic/{topic_parameter.value_as_string}"]
+        #             },
+        #             {
+        #                 "Effect": "Allow",
+        #                 "Action": [
+        #                     "iot:Subscribe"
+        #                 ],
+        #                 "Resource": [f"arn:aws:iot:{self.region}:{self.account}:topicfilter/{topic_parameter.value_as_string}"]
+        #             },
+        #             {
+        #                 "Effect": "Allow",
+        #                 "Action": [
+        #                     "iot:Receive"
+        #                 ],
+        #                 "Resource": [f"arn:aws:iot:{self.region}:{self.account}:topic/{topic_parameter.value_as_string}"]
+        #             }
+        #         ]
+        #     }
+        # )
 
 
 
@@ -124,8 +125,13 @@ class IoTThingStack(Stack):
                 "CERTIFICATE_SSM_PARAM": f"/iot/{thing_name}/certificate",
                 "PRIVATE_KEY_SSM_PARAM": f"/iot/{thing_name}/private-key",
                 "PUBLIC_KEY_SSM_PARAM": f"/iot/{thing_name}/public-key",
-                "THING_NAME": thing_name
+                "THING_NAME": thing_name,
+                "IOT_TOPIC": topic_parameter.value_as_string,
+                "IOT_POLICY": f"{thing_name}-policy",
+                "REGION": self.region,
+                "ACCOUNT": self.account
             },
+           
             # Disable the default role creation with managed policy
             role=iam.Role(
                 self, "CreateCertLambdaRole",
@@ -197,7 +203,8 @@ class IoTThingStack(Stack):
                 "iot:CreateThing"
             ],
             resources=[
-                f"arn:aws:iot:{self.region}:{self.account}:thing/{thing_name}"
+                f"arn:aws:iot:{self.region}:{self.account}:thing/{thing_name}",
+                 f"arn:aws:iot:{self.region}:{self.account}:cert/*"
             ]
         ))
 
@@ -225,11 +232,27 @@ class IoTThingStack(Stack):
             ]
         ))
 
+        # Add IoT policy permissions to Lambda
+        cert_handler.add_to_role_policy(iam.PolicyStatement(
+            actions=[
+                "iot:CreatePolicy",
+                "iot:GetPolicy",
+                "iot:DeletePolicy",
+                "iot:ListPolicyVersions",
+                "iot:DeletePolicyVersion"
+            ],
+            resources=[
+                f"arn:aws:iot:{self.region}:{self.account}:policy/{thing_name}-policy"
+            ]
+        ))
+
+
 
 
         # Create custom resource
         cert_resource = CustomResource(
             self, "CertificateResource",
+            removal_policy=RemovalPolicy.RETAIN,
             service_token=cr.Provider(
                 self, "CertProvider",
                 on_event_handler=cert_handler
