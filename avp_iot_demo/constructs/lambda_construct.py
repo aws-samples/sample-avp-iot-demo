@@ -6,12 +6,13 @@ class Lambdas(Construct):
     def __init__(self, scope: Construct, id: str, policy_store_id: str, thing_name: str, iot_topic: str) -> None:
         super().__init__(scope, id)
 
-        # Create custom roles for each Lambda function
+        # Create custom roles first
         authorizer_role = self._create_authorizer_role(policy_store_id)
         devices_role = self._create_devices_role()
         download_role = self._create_download_role(iot_topic)
         role_integration_role = self._create_role_integration_role()
 
+        # Create Lambda functions with the roles
         self.authorizer_function = _lambda.Function(
             self,
             "AuthorizerFunction",
@@ -84,7 +85,7 @@ class Lambdas(Construct):
             )
         )
         
-        # Add CloudWatch Logs permissions
+        # Add CloudWatch Logs permissions with wildcard to match any function name
         role.add_to_policy(
             iam.PolicyStatement(
                 actions=[
@@ -93,7 +94,7 @@ class Lambdas(Construct):
                     "logs:PutLogEvents",
                 ],
                 resources=[
-                    f"arn:aws:logs:{Stack.of(self).region}:{Stack.of(self).account}:log-group:/aws/lambda/AuthorizerFunction*",
+                    f"arn:aws:logs:{Stack.of(self).region}:{Stack.of(self).account}:log-group:/aws/lambda/*:*",
                 ]
             )
         )
@@ -108,16 +109,16 @@ class Lambdas(Construct):
             assumed_by=iam.ServicePrincipal("lambda.amazonaws.com")
         )
         
-        # Add IoT permissions
+        # Add IoT permissions - using * resource since ListThings is a list operation
         role.add_to_policy(
             iam.PolicyStatement(
                 effect=iam.Effect.ALLOW, 
                 actions=["iot:ListThings"], 
-                resources=[f"arn:aws:iot:{Stack.of(self).region}:{Stack.of(self).account}:*"]
+                resources=["*"]  # ListThings requires * resource permission
             )
         )
         
-        # Add CloudWatch Logs permissions
+        # Add CloudWatch Logs permissions with wildcard to match any function name
         role.add_to_policy(
             iam.PolicyStatement(
                 actions=[
@@ -126,7 +127,7 @@ class Lambdas(Construct):
                     "logs:PutLogEvents",
                 ],
                 resources=[
-                    f"arn:aws:logs:{Stack.of(self).region}:{Stack.of(self).account}:log-group:/aws/lambda/DevicesIntegrationFunction*",
+                    f"arn:aws:logs:{Stack.of(self).region}:{Stack.of(self).account}:log-group:/aws/lambda/*:*",
                 ]
             )
         )
@@ -152,7 +153,7 @@ class Lambdas(Construct):
             )
         )
         
-        # Add CloudWatch Logs permissions
+        # Add CloudWatch Logs permissions with wildcard to match any function name
         role.add_to_policy(
             iam.PolicyStatement(
                 actions=[
@@ -161,7 +162,7 @@ class Lambdas(Construct):
                     "logs:PutLogEvents",
                 ],
                 resources=[
-                    f"arn:aws:logs:{Stack.of(self).region}:{Stack.of(self).account}:log-group:/aws/lambda/DownloadIntegrationFunction*",
+                    f"arn:aws:logs:{Stack.of(self).region}:{Stack.of(self).account}:log-group:/aws/lambda/*:*",
                 ]
             )
         )
@@ -176,7 +177,7 @@ class Lambdas(Construct):
             assumed_by=iam.ServicePrincipal("lambda.amazonaws.com")
         )
         
-        # Add CloudWatch Logs permissions
+        # Add CloudWatch Logs permissions with wildcard to match any function name
         role.add_to_policy(
             iam.PolicyStatement(
                 actions=[
@@ -185,7 +186,7 @@ class Lambdas(Construct):
                     "logs:PutLogEvents",
                 ],
                 resources=[
-                    f"arn:aws:logs:{Stack.of(self).region}:{Stack.of(self).account}:log-group:/aws/lambda/RoleIntegrationFunction*",
+                    f"arn:aws:logs:{Stack.of(self).region}:{Stack.of(self).account}:log-group:/aws/lambda/*:*",
                 ]
             )
         )

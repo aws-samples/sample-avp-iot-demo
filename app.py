@@ -213,7 +213,7 @@ NagSuppressions.add_resource_suppressions_by_path(
             "id": "AwsSolutions-IAM5",
             "reason": "CloudWatch Logs permissions require wildcard for Lambda log groups",
             "appliesTo": [
-                "Resource::arn:aws:logs:<AWS::Region>:<AWS::AccountId>:log-group:/aws/lambda/AuthorizerFunction*"
+                "Resource::arn:aws:logs:<AWS::Region>:<AWS::AccountId>:log-group:/aws/lambda/*:*"
             ]
         }
     ]
@@ -225,16 +225,16 @@ NagSuppressions.add_resource_suppressions_by_path(
     [
         {
             "id": "AwsSolutions-IAM5",
-            "reason": "IoT ListThings operation requires wildcard permissions as it operates across multiple resource types",
+            "reason": "IoT ListThings operation requires * resource permission as it's a list operation",
             "appliesTo": [
-                "Resource::arn:aws:iot:<AWS::Region>:<AWS::AccountId>:*"
+                "Resource::*"
             ]
         },
         {
             "id": "AwsSolutions-IAM5",
             "reason": "CloudWatch Logs permissions require wildcard for Lambda log groups",
             "appliesTo": [
-                "Resource::arn:aws:logs:<AWS::Region>:<AWS::AccountId>:log-group:/aws/lambda/DevicesIntegrationFunction*"
+                "Resource::arn:aws:logs:<AWS::Region>:<AWS::AccountId>:log-group:/aws/lambda/*:*"
             ]
         }
     ]
@@ -248,7 +248,7 @@ NagSuppressions.add_resource_suppressions_by_path(
             "id": "AwsSolutions-IAM5",
             "reason": "CloudWatch Logs permissions require wildcard for Lambda log groups",
             "appliesTo": [
-                "Resource::arn:aws:logs:<AWS::Region>:<AWS::AccountId>:log-group:/aws/lambda/DownloadIntegrationFunction*"
+                "Resource::arn:aws:logs:<AWS::Region>:<AWS::AccountId>:log-group:/aws/lambda/*:*"
             ]
         }
     ]
@@ -262,7 +262,7 @@ NagSuppressions.add_resource_suppressions_by_path(
             "id": "AwsSolutions-IAM5",
             "reason": "CloudWatch Logs permissions require wildcard for Lambda log groups",
             "appliesTo": [
-                "Resource::arn:aws:logs:<AWS::Region>:<AWS::AccountId>:log-group:/aws/lambda/RoleIntegrationFunction*"
+                "Resource::arn:aws:logs:<AWS::Region>:<AWS::AccountId>:log-group:/aws/lambda/*:*"
             ]
         }
     ]
