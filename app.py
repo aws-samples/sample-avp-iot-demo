@@ -160,6 +160,21 @@ NagSuppressions.add_resource_suppressions_by_path(
     ]
 )
 
+# Suppress IAM4 for API Gateway CloudWatch role
+NagSuppressions.add_resource_suppressions_by_path(
+    avp_stack,
+    "/AvpIotDemoStack/AvpIotDemoApi/AvpIotDemoApi/CloudWatchRole/Resource",
+    [
+        {
+            "id": "AwsSolutions-IAM4",
+            "reason": "Using AWS managed policy for API Gateway CloudWatch logging is required for this functionality",
+            "appliesTo": [
+                "Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+            ]
+        }
+    ]
+)
+
 # Suppress Lambda runtime warnings for all Lambda functions in AvpIotDemoStack
 NagSuppressions.add_resource_suppressions_by_path(
     avp_stack,

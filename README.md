@@ -78,6 +78,12 @@ The EC2 instance runs a Python script that connects to AWS IoT Core as a device,
 
 ## Deployment Command
 
+Before deploying the stack for the first time, you will need to bootstrap your environment with the following command:
+
+```bash
+cdk bootstrap
+```
+
 **Note: This stack does not create an S3 bucket, you need to create a bucket before deploying this stack**
 
 ```bash
@@ -161,7 +167,7 @@ python3 values_replacer.py
 Before running the development server, make sure to have the requirement node dependencies installed. To install node dependencies, cd into the web_app directory from root:
 
 ```bash
-cd /weweb_app/
+cd web_app/
 ```
 
 And run the following command:

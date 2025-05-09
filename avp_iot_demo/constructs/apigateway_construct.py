@@ -41,7 +41,7 @@ class AvpIotDemoApiGateway(Construct):
             retention=logs.RetentionDays.ONE_WEEK,
             removal_policy=RemovalPolicy.DESTROY
         )
-
+        
         # Get the OpenAPI spec from a YAML template as a dictionary
         openapi_spec = self.__get_openapi_spec(
             f'{os.path.join(os.path.dirname(__file__), "openapi-spec.yaml")}',
@@ -65,6 +65,7 @@ class AvpIotDemoApiGateway(Construct):
                 access_log_destination=apigateway.LogGroupLogDestination(log_group),
                 access_log_format=apigateway.AccessLogFormat.clf(),
             ),
+            cloud_watch_role=True,
         )
 
     @property
