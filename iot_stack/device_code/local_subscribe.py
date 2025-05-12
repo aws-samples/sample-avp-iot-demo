@@ -106,7 +106,7 @@ def main():
     # Parse arguments
     parser = argparse.ArgumentParser(description="IoT Core subscriber and S3 downloader")
     parser.add_argument('--topic', required=True, help='Topic to subscribe to')
-    parser.add_argument('--client-id', default='ec2-subscriber',
+    parser.add_argument('--client-id', default='avp-iot-device',
                       help='Client ID for MQTT connection (default: ec2-subscriber)')
 
     args = parser.parse_args()
