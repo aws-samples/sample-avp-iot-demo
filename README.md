@@ -88,17 +88,17 @@ cdk bootstrap
 
 ```bash
 cdk deploy IoTThingStack \
-  --parameters SSHAccessIP=10.0.0.100/32 \
   --parameters BucketName=iot-download-bucket \
   --parameters TopicName=my/custom/topic \
   --parameters ThingName=avp-iot-device
 ```
 
+
+
 ## Parameters Explanation
 
 | Parameter | Value | Description |
 |-----------|--------|-------------|
-| `SSHAccessIP` | `10.0.0.100/32` | Specifies the IP address range allowed to SSH into the EC2 instance that acts as an IoT device. The `/32` suffix indicates a single IP address. For security, this should be your current public IP address. |
 | `BucketName` | `iot-download-bucket` | Name of the S3 bucket to be used for IoT file storage. This bucket should be created before deploying the stack |
 | `TopicName` | `my/custom/topic` | MQTT topic name for IoT message routing. Uses forward slashes (`/`) for topic hierarchy. Defines the message path for publishing and subscribing IoT devices. For the purposes of this blog this will be the topic that the IoT device will subscribe to download files from S3|
 | `ThingName` | `avp-iot-device` | Name of the IoT Thing to be created. This will be the identity of your IoT device in AWS IoT Core. For the purposes of this blog, this will be the device that can be listed or the remote commands that will be sent to based on the persona logged into the WebApp|
@@ -116,6 +116,8 @@ python3 /home/ec2-user/device_code/local_subscribe.py --topic my/custom/topic --
 ls -l /home/ec2-user/device_code/local_subscribe.py
 ```
 
+**Note: Replace `my/custom/topic` and `avp-iot-device` with names used for IoT topic name and IoT Thing name while deploying `IoTThingStack`**
+
 ## Expected Output
 
 ```bash
@@ -126,6 +128,8 @@ Waiting for messages...
 ```
 
 ## Running in Background
+
+**Note: Replace `my/custom/topic` and `avp-iot-device` with names used for IoT topic name and IoT Thing name while deploying `IoTThingStack`**
 
 ```bash
 # Start in background
