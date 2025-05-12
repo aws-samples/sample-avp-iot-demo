@@ -112,7 +112,7 @@ As part of this demo an EC2 instance will be deployed that acts as an IoT Thing.
 ## Start the IoT code that downloads the file from S3
 
 ```bash
-python3 /home/ec2-user/device_code/local_subscribe.py --topic "my/custom/topic"
+python3 /home/ec2-user/device_code/local_subscribe.py --topic my/custom/topic --client-id avp-iot-device
 ls -l /home/ec2-user/device_code/local_subscribe.py
 ```
 
@@ -129,7 +129,7 @@ Waiting for messages...
 
 ```bash
 # Start in background
-nohup python3 /home/ec2-user/device_code/local_subscribe.py --topic "my/custom/topic" > subscriber.log 2>&1 &
+nohup python3 /home/ec2-user/device_code/local_subscribe.py --topic my/custom/topic --client-id avp-iot-device > subscriber.log 2>&1 &
 
 # Check process
 ps aux | grep local_subscribe.py
