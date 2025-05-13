@@ -34,14 +34,7 @@ class IoTThingStack(Stack):
 
         
 
-         # Define the IP address parameter
-        ssh_ip_parameter = CfnParameter(
-            self, "SSHAccessIP",
-            type="String",
-            description="IP address allowed to SSH to the EC2 instance (CIDR format, e.g., 192.168.1.0/24)",
-            allowed_pattern="^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$",
-            constraint_description="Must be a valid IP CIDR range of the form x.x.x.x/x"
-        )
+
         bucket_parameter = CfnParameter(
             self, "BucketName",
             type="String",
@@ -423,12 +416,6 @@ class IoTThingStack(Stack):
         # Grant S3 read permissions to EC2 role for the asset bucket
         device_code.grant_read(instance.role)
 
-        # Modify the security group rule to use the parameter
-        instance.connections.allow_from(
-            ec2.Peer.ipv4(ssh_ip_parameter.value_as_string),
-            ec2.Port.tcp(22),
-            description="Allow SSH from specified IP"
-        )
 
         # Add EC2 instance outputs
         CfnOutput(
