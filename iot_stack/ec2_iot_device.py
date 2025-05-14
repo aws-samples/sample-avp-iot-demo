@@ -388,6 +388,7 @@ class IoTThingStack(Stack):
             "pip3 install -r /home/ec2-user/device_code/requirements.txt",
             "pip3 install awsiotsdk --ignore-installed awscrt",
             "pip3 install boto3",
+            f"export AWS_DEFAULT_REGION={self.region}"
             "fi",
                         )
 

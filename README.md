@@ -64,7 +64,7 @@ This stack deploys:
 3. Necessary IAM roles and permissions
 4. Integration with an S3 bucket for file storage
 
-The EC2 instance runs a Python script that connects to AWS IoT Core as a device, subscribes to the specified MQTT topic, and processes incoming messages. For security, SSH access to this EC2 instance is restricted to the IP address specified in the `SSHAccessIP` parameter.
+The EC2 instance runs a Python script that connects to AWS IoT Core as a device, subscribes to the specified MQTT topic, and processes incoming messages.
 
 ## Prerequisites
 
@@ -107,13 +107,20 @@ cdk deploy IoTThingStack \
 
 ## Login to the EC2 device
 
-As part of this demo an EC2 instance will be deployed that acts as an IoT Thing. You can use the EC2 session manager to login to the device, this will only be accessible to the IP provided as part of the IoT stack inout parameter.
+As part of this demo an EC2 instance will be deployed that acts as an IoT Thing. You can use the EC2 session manager to login to the device.
 
 ## Start the IoT code that downloads the file from S3
 
+Switch to root user (superuser) by running the following command:
+
+```bash
+sudo su
+```
+
+Run the Python script:
+
 ```bash
 python3 /home/ec2-user/device_code/local_subscribe.py --topic my/custom/topic --client-id avp-iot-device
-ls -l /home/ec2-user/device_code/local_subscribe.py
 ```
 
 **Note: Replace `my/custom/topic` and `avp-iot-device` with names used for IoT topic name and IoT Thing name while deploying `IoTThingStack`**
@@ -124,10 +131,10 @@ ls -l /home/ec2-user/device_code/local_subscribe.py
 Initializing IoT subscriber...
 Connected to MQTT broker
 Subscribing to topic: my/custom/topic
-Waiting for messages...
+Subscribed to topic: my/custom/topic
 ```
 
-## Running in Background
+## Running in the background
 
 **Note: Replace `my/custom/topic` and `avp-iot-device` with names used for IoT topic name and IoT Thing name while deploying `IoTThingStack`**
 
