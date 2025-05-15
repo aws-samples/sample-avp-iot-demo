@@ -60,50 +60,6 @@ class IoTThingStack(Stack):
 
         # Use the parameter throughout the code
         thing_name = thing_name_parameter.value_as_string
-
-
-        # # Define the IoT Policy with more specific resources
-        # iot_policy = iot.CfnPolicy(
-        #     self, "IoTPolicy",
-        #     policy_name=f"{thing_name}-policy",
-        #     policy_document={
-        #         "Version": "2012-10-17",
-        #         "Statement": [
-        #             {
-        #                 "Effect": "Allow",
-        #                 "Action": [
-        #                     "iot:Connect"
-        #                 ],
-        #                 "Resource": [f"arn:aws:iot:{self.region}:{self.account}:client/{thing_name}"]
-        #             },
-        #             {
-        #                 "Effect": "Allow",
-        #                 "Action": [
-        #                     "iot:Publish"
-        #                 ],
-        #                 "Resource": [f"arn:aws:iot:{self.region}:{self.account}:topic/{topic_parameter.value_as_string}"]
-        #             },
-        #             {
-        #                 "Effect": "Allow",
-        #                 "Action": [
-        #                     "iot:Subscribe"
-        #                 ],
-        #                 "Resource": [f"arn:aws:iot:{self.region}:{self.account}:topicfilter/{topic_parameter.value_as_string}"]
-        #             },
-        #             {
-        #                 "Effect": "Allow",
-        #                 "Action": [
-        #                     "iot:Receive"
-        #                 ],
-        #                 "Resource": [f"arn:aws:iot:{self.region}:{self.account}:topic/{topic_parameter.value_as_string}"]
-        #             }
-        #         ]
-        #     }
-        # )
-
-
-
-
         
         
         # Lambda function for certificate creation
@@ -306,7 +262,11 @@ class IoTThingStack(Stack):
         ec2_role = iam.Role(
             self, "EC2Role",
             assumed_by=iam.ServicePrincipal("ec2.amazonaws.com"),
+            managed_policies=[
+                iam.ManagedPolicy.from_aws_managed_policy_name("AmazonSSMManagedInstanceCore")
+            ]
         )
+
 
         # Add SSM permissions to EC2 role to read parameters
         ec2_role.add_to_policy(iam.PolicyStatement(
@@ -387,8 +347,7 @@ class IoTThingStack(Stack):
             "if [ -f /home/ec2-user/device_code/requirements.txt ]; then",
             "pip3 install -r /home/ec2-user/device_code/requirements.txt",
             "pip3 install awsiotsdk --ignore-installed awscrt",
-            "pip3 install boto3",
-            f"export AWS_DEFAULT_REGION={self.region}"
+            "pip3 install boto3"
             "fi",
                         )
 

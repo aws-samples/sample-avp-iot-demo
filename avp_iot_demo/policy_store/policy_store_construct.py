@@ -33,7 +33,7 @@ class AvpPolicyStore(Construct):
             "CognitoIdentitySource",
             configuration=verifiedpermissions.CfnIdentitySource.IdentitySourceConfigurationProperty(
                 cognito_user_pool_configuration=verifiedpermissions.CfnIdentitySource.CognitoUserPoolConfigurationProperty(
-                    user_pool_arn=f"arn:aws:cognito-idp:us-east-1:{Stack.of(self).account}:userpool/{user_pool_id}",
+                    user_pool_arn=f"arn:aws:cognito-idp:{Stack.of(self).region}:{Stack.of(self).account}:userpool/{user_pool_id}",
                 )
             ),
             policy_store_id=self._policy_store_id,
