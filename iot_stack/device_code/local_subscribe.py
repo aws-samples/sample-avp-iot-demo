@@ -2,6 +2,7 @@ import json
 import boto3
 import time
 import os
+import threading
 from datetime import datetime
 from awscrt import mqtt
 from awsiot import mqtt_connection_builder
@@ -16,15 +17,25 @@ ROOT_CA = os.path.join(CERT_PATH, "AmazonRootCA1.pem")
 
 
 def get_current_region():
-    """Get current AWS region using boto3 session"""
+    """Get current AWS region from environment variables or EC2 metadata."""
+    # Check environment variables
+    for env_var in ['AWS_REGION', 'AWS_DEFAULT_REGION']:
+        if env_var in os.environ:
+            return os.environ[env_var]
+    
+    # Try to get region from EC2 metadata
     try:
-        session = boto3.Session()
-        return session.region_name or \
+       session = boto3.Session()
+       return session.region_name or \
                boto3.client('ec2').meta.region_name or \
                os.environ.get('AWS_DEFAULT_REGION', 'us-east-1')
-    except Exception as e:
-        print(f"Error getting region: {str(e)}")
-        return 'us-east-1'
+
+    except Exception:
+        pass  # Silently fail if not on EC2 or metadata service unavailable
+    
+    # Default fallback
+    return 'us-east-1'
+
 
 def get_iot_endpoint():
     """Get AWS IoT endpoint using boto3."""
@@ -66,6 +77,13 @@ def download_from_s3(s3_uri, local_path):
         print(f"Error downloading file: {str(e)}")
         return False
 
+def download_worker(s3_path, local_path):
+    """Worker function to download file in a separate thread."""
+    try:
+        download_from_s3(s3_path, local_path)
+    except Exception as e:
+        print(f"Error in download worker thread: {str(e)}")
+
 def on_connection_interrupted(connection, error, **kwargs):
     print(f"Connection interrupted. error: {error}")
 
@@ -82,7 +100,7 @@ def on_message_received(topic, payload, dup, qos, retain, **kwargs):
         # Extract information from payload
         device_id = message.get('iotdevice')
         timestamp = message.get('timestamp')
-        s3_path = message.get('s3path')
+        s3_path = message.get('s3Path')
 
         if not s3_path:
             print("No S3 path provided in message")
@@ -94,8 +112,15 @@ def on_message_received(topic, payload, dup, qos, retain, **kwargs):
         filename = os.path.basename(s3_path)
         local_path = f"{local_directory}/{filename}"
 
-        # Download the file
-        download_from_s3(s3_path, local_path)
+        # Start a new thread to download the file
+        print(f"Starting download thread for {s3_path}")
+        download_thread = threading.Thread(
+            target=download_worker,
+            args=(s3_path, local_path),
+            daemon=True
+        )
+        download_thread.start()
+        print(f"Download thread started for {s3_path}")
 
     except json.JSONDecodeError as e:
         print(f"Error decoding JSON payload: {str(e)}")
@@ -167,4 +192,3 @@ if __name__ == "__main__":
 
 
 #python subscriber.py --topic "my/topic/name"
-
