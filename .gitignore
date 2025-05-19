@@ -10,12 +10,11 @@ __pycache__
 .cdk.staging
 cdk.out
 
+# .DS_Store for MacOS
 .DS_Store
 
-# virtual environment
+# Virtual Environment
 /venv
 
-#outputs
+# Outputs
 outputs.json
-
-ash_output/*
