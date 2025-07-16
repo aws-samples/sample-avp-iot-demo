@@ -1,230 +1,609 @@
+# Secure IoT device management with fine-grained access control using Amazon Verified Permissions
 
-# Implement role-based access control (RBAC) to IoT devices with Amazon Verified Permissions
+> **For detailed setup instructions and CDK deployment steps, see [SETUP.md](./SETUP.md)**
 
-This is a sample cdk project used to demo [Amazon Verified Permissions](https://aws.amazon.com/verified-permissions/) integration with [AWS IoT](https://aws.amazon.com/iot-core/).  [Click here to view the blog{WIP}](www.example.com)
+The Internet of Things (IoT) has wide applications in many industries,
+such as manufacturing, agriculture, supply chain, and healthcare. As
+organizations scale their IoT deployments, managing secure access
+becomes increasingly complex. Consider a large manufacturing facility
+with hundreds of connected devices across multiple production lines. The
+facility employs maintenance technicians, process engineers, IT staff,
+and operations managers---each requiring different levels of access to
+these IoT devices.
 
-This project is set up like a standard [CDK Python project](https://docs.aws.amazon.com/cdk/v2/guide/work-with-cdk-python.html).  The initialization
-process also creates a virtualenv within this project, stored under the `.venv`
-directory.  To create the virtualenv it assumes that there is a `python3`
-(or `python` for Windows) executable in your path with access to the `venv`
-package. If for any reason the automatic creation of the virtualenv fails,
-you can create the virtualenv manually.
+When a critical machine on Production Line A malfunctions, the facility
+needs to make sure that only certified maintenance technicians can
+access its diagnostic systems and perform repairs. Meanwhile, process
+engineers must be able to modify operational parameters across multiple
+production lines but shouldn\'t have access to perform maintenance
+tasks. IT staff need to push software updates to devices in specific
+zones without disrupting ongoing operations, while operations managers
+require comprehensive monitoring capabilities across systems.
 
-To manually create a virtualenv on MacOS and Linux:
+This complex web of access requirements presents significant challenges.
+Without proper role-based access control (RBAC), organizations risk
+unauthorized access to critical systems, potential safety incidents,
+compliance violations, and operational inefficiencies. Traditional
+approaches to access management become unwieldy as IoT deployments
+scale, often requiring custom authorization code for each endpoint and
+making it difficult to maintain consistent security policies across the
+organization.
+
+Different personnel require different levels of access. An IT technician
+might need to send software updates to devices in specific regions,
+while operations engineers need to control device operations without
+access to firmware updates. Managing these intricate permission
+structures while providing both security and operational efficiency has
+become a critical challenge for organizations deploying IoT solutions at
+scale.
+
+In this post, you learn how to deploy an end-to-end application to
+enable fine-grained access control to send out command and control
+messages to IoT devices based on a user\'s role. This application uses
+several AWS services working together.
+
+- [Amazon
+  Cognito](https://aws.amazon.com/pm/cognito)
+  -- A user identity and data synchronization service that helps you add
+  user sign-up, sign-in, and access control to your applications
+
+- [Amazon Verified
+  Permissions](https://aws.amazon.com/verified-permissions/) -- A
+  scalable permissions management and authorization service for
+  fine-grained access control
+
+- [AWS
+  Lambda](https://aws.amazon.com/pm/lambda)
+  -- A serverless compute service that you can use to run code without
+  provisioning or managing servers
+
+- [Amazon API Gateway](https://aws.amazon.com/api-gateway/) -- A fully
+  managed service used to create, publish, and secure APIs
+
+- [AWS IoT Core](https://aws.amazon.com/iot-core/) -- A managed cloud
+  platform that lets connected devices interact with cloud applications
+  and other devices
+
+- [Amazon Elastic Compute Cloud (Amazon
+  EC2)](https://aws.amazon.com/pm/ec2)
+  -- A service that provides secure, resizable compute capacity in the
+  cloud
+
+- [AWS Identity and Access Management
+  (IAM)](https://aws.amazon.com/iam/) -- A service for securely
+  controlling access to AWS services and resources
+
+Depending on each user\'s role and allowable permissions, they will be
+able to interact with different resources and perform actions directly
+from the web application.
+
+## Why Verified Permissions for IoT applications?
+
+[Verified Permissions](https://aws.amazon.com/verified-permissions/)
+solves the preceding challenges through centralized, fine-grained
+authorization that significantly reduces development time and security
+risks. Unlike approaches requiring custom authorization code for each
+endpoint, Verified Permissions provides a centralized policy store that
+manages permissions across API calls in your Amazon Cognito
+authenticated applications.
+
+This centralization delivers substantial value for IoT implementations:
+
+- Significantly reduces development time by eliminating redundant
+  authorization code
+
+- Enhances security through consistent access policies across device
+  interactions
+
+- Simplifies compliance with centralized audit trails and policy
+  versioning
+
+- Enables dynamic permission adjustments without application code
+  changes
+
+- Supports complex authorization scenarios using Cedar, the policy
+  language of Verified Permissions. With Cedar, you can express
+  sophisticated access rules that traditional IAM policies cannot
+  handle, such as \"Allow operators to control devices only in their
+  assigned region during business hours\" or \"Permit firmware updates
+  only for devices with security patches older than 30 days.\"
+
+## Cedar policy language overview
+
+Cedar is the policy language used by Verified Permissions, developed to
+address the growing complexity of authorization decisions in modern
+applications. It emerged from the need for a more expressive,
+maintainable, and scalable authorization solution than traditional
+role-based access control systems.
+
+ 
+
+Cedar is designed to be human-readable while providing powerful
+authorization capabilities that can handle fine-grained permissions
+across diverse resources and user contexts. Its importance lies in
+enabling developers to implement consistent, auditable authorization
+logic that can evolve with changing business requirements without
+sacrificing security or performance.
+
+- **Principal** -- The user or service making the request
+
+- **Action** -- The operation is being performed
+
+- **Resource** -- The entity is being accessed
+
+### Basic Cedar policy structure
+
+Cedar policies can be implemented in application code, stored in policy
+stores, or managed through Verified Permissions. These policies are
+evaluated at runtime when authorization decisions need to be made and
+can be integrated with existing identity providers and application data
+sources.
 
 ```bash
-python3 -m venv .venv
+permit (\
+    principal,\
+    action,\
+    resource\
+)\
+when {\
+    conditions\
+};
 ```
 
-After the init process completes and the virtualenv is created, you can use the following
-step to activate your virtualenv.
+### Example Cedar policies for IoT
+
+The following policies demonstrate Cedar\'s ability to express complex
+authorization rules based on attributes of the principal, resource,
+action, and context. Cedar also supports policy inheritance, scope
+restrictions, and other advanced features that make it ideal for IoT
+applications with complex permission requirements.
+
+**Example 1: Allow operators to control devices only in their assigned
+region**
 
 ```bash
-source .venv/bin/activate
+permit (\
+    principal in UserGroup::\"Operators\",\
+    action in \[IoTAction::\"ControlDevice\",
+IoTAction::\"ReadDeviceStatus\"\],\
+    resource in IoTDevice::\*\
+)\
+when {\
+    principal.assignedRegion == resource.region\
+};
 ```
 
-If you are a Windows platform, you would activate the virtualenv like this:
+**Example 2: Allow firmware updates only during maintenance windows**
 
 ```bash
-% .venv\Scripts\activate.bat
+permit (\
+    principal in UserGroup::\"Technicians\",\
+    action == IoTAction::\"UpdateFirmware\",\
+    resource in IoTDevice::\*\
+)\
+when {\
+    context.currentTime.hour \>= 22 \|\| context.currentTime.hour \< 4\
+};
 ```
 
-Once the virtualenv is activated, you can install the required dependencies.
+**Example 3: Allow emergency access to critical devices**
 
 ```bash
-pip install -r requirements.txt
+permit (\
+    principal in UserGroup::\"EmergencyResponse\",\
+    action in IoTAction::\*,\
+    resource in IoTDevice::\*\
+)\
+when {\
+    context.request.emergency == true &&\
+    resource.criticality == \"high\"\
+};
 ```
 
-At this point you can now synthesize the CloudFormation template for this code.
-
-``` bash
-cdk synth -e <StackName>
-```
-
-To add additional dependencies, for example other CDK libraries, just add
-them to your `setup.py` file and rerun the `pip install -r requirements.txt`
-command.
-
-## Useful commands
-
-* `cdk ls`          list all stacks in the app
-* `cdk synth`       emits the synthesized CloudFormation template
-* `cdk deploy`      deploy this stack to your default AWS account/region
-* `cdk diff`        compare deployed stack with current state
-* `cdk docs`        open CDK documentation
-
-# IoT Thing Stack Deployment Guide
-
-## Architecture Overview
-
-This stack deploys:
-
-1. An AWS IoT Thing with certificates and policies
-2. An EC2 instance that acts as an IoT device
-3. Necessary IAM roles and permissions
-4. Integration with an S3 bucket for file storage
-
-The EC2 instance runs a Python script that connects to AWS IoT Core as a device, subscribes to the specified MQTT topic, and processes incoming messages.
+[AWS IoT Core](https://aws.amazon.com/iot-core/) provides the cloud
+services that connect your IoT devices to other devices and AWS cloud
+services. When combined with Verified Permissions, you get a powerful
+solution for implementing secure, role-based access control for your IoT
+fleet.
 
 ## Prerequisites
 
-* AWS CDK CLI installed
+Before getting started with this solution, make sure that you have the
+following resources and tools available:
 
-* AWS credentials configured
+- AWS account
 
-* Node.js and npm installed
+  - An active [AWS account](https://aws.amazon.com/free)
 
-* Sufficient AWS permissions to create resources in the IoT Stack
+  - An IAM user or role with appropriate permissions
 
-## Deployment Command
+  - AWS credentials properly configured on your local machine
 
-Before deploying the stack for the first time, you will need to bootstrap your environment with the following command:
+- [AWS CDK
+  prerequisites](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html)
 
-```bash
-cdk bootstrap
+  - [Git](https://git-scm.com/downloads)
+
+  - [Npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
+
+  - Basic understanding of TypeScript and Python
+
+## Solution architecture
+
+![Solution Architecture](./arch-images/SolutionArchitecture.jpg)
+
+Figure 1: IoT device management solution architecture
+
+Figure 1 shows the following solution flow:
+
+1.  A local web application authenticates users using Amazon Cognito
+
+2.  Requests pass through API Gateway to a Lambda authorizer, which
+    evaluates permissions
+
+3.  Verified Permissions determines the authorization level based on the
+    user group
+
+4.  Authorized requests are routed to Lambda functions that handle
+    business logic
+
+5.  AWS IoT Core manages device communication based on IoT Rules
+
+6.  Edge devices receive and respond to authorized commands
+
+## Solution walkthrough
+
+To demonstrate this solution, let\'s explore a hypothetical scenario in
+a manufacturing plant. In this example, maintenance technicians can be
+granted access only to the specific production line machinery they are
+certified to service, while process engineers can be given permissions
+to modify operational parameters across multiple production lines but
+without the ability to perform maintenance tasks. This granular control
+helps make sure that equipment is only accessed and operated by
+qualified personnel, improving both safety and operational efficiency.
+
+### User personas: Administrators and operators
+
+For this post, we've designated two groups of users to simulate access
+level: managers and operators. The idea is that managers should have
+access to every resource, while operators should only have access to a
+subset of resources. The grouping of such entities happens in Amazon
+Cognito. When you add users to groups in Amazon Cognito, they
+automatically receive the permissions assigned to those groups. This
+works because Verified Permissions handles the authorization process.
+The system is set up with Cognito as the source of user identity
+information, which means that Verified Permissions can check a user\'s
+group membership to determine what they\'re allowed to do. This approach
+uses the scalable, fine-grained permissions management capabilities of
+Verified Permissions for custom applications. This can be helpful when
+managing permissions at scale because now you have a single API call
+being made to determine access level.
+
+### User authentication flow
+
+To understand how the solution secures access to IoT devices, it\'s
+important to first examine how users are authenticated. The following
+steps outline the authentication process:
+
+1.  A user initiates the process by accessing the local web application
+
+2.  The web application communicates with Amazon Cognito for
+    authentication
+
+3.  Upon successful authentication, Amazon Cognito returns a JWT token
+    containing metadata about the user, including which group they
+    belong to
+
+4.  The token is stored in the browser to persist the session
+
+### Permission boundary resolution
+
+After a user is authenticated, the system must determine what actions
+they're authorized to perform. This authorization process is critical to
+implementing role-based access control and works as follows:
+
+1.  The web application sends a request to API Gateway including the JWT
+    token to:
+
+    a.  List IoT devices (/GET)
+
+    b.  Download File (/POST)
+
+2.  API Gateway endpoints are protected by a Lambda authorizer
+
+3.  The Lambda authorizer queries Verified Permissions to determine if a
+    user has permission to access the endpoint
+
+4.  Verified Permissions returns an allow or deny IAM policy, dictating
+    access to the Lambda function configured on the API endpoint as an
+    integration request
+
+5.  The web application receives and processes the API\'s response based
+    on the Verified Permissions outcome:
+
+    a.  If the user is allowed to access a resource, the application
+        will display the result of the API call
+
+    b.  If the user is not allowed to access a resource, the application
+        will display an access denied error
+
+### Edge device command execution
+
+After authorization is confirmed, commands can be securely sent to IoT
+devices. This process demonstrates how the entire solution works
+end-to-end:
+
+1.  A user initiates a remote action through the UI
+
+2.  The web application sends a request to API Gateway
+
+3.  The request undergoes permission validation through Verified
+    Permissions
+
+4.  The AWS IoT Core API processes the validated request
+
+5.  AWS IoT Core receives the command and converts it to an MQTT message
+
+6.  The edge device receives the MQTT message and executes the required
+    action
+
+### Key implementation considerations:
+
+When implementing this solution, you must address several important
+factors to help ensure security, performance, and reliability. For
+security, the solution implements JWT token validation, Verified
+Permissions checks for actions and endpoints, and secure MQTT
+communication with edge devices. Scalability is achieved through
+serverless architecture components, AWS IoT Core support for millions of
+devices, and efficient permission boundary caching. Monitoring
+capabilities include [Amazon
+CloudWatch](https://aws.amazon.com/cloudwatch/) integration for logging,
+AWS IoT Core metrics for device communication, and API Gateway request
+tracking. These considerations work together to create a robust, secure,
+and scalable IoT access control system.
+
+## Deploy the solution
+
+### Clone the repository
+
+- Steps to clone the github repo
+  <https://github.com/aws-samples/sample-avp-iot-demo>
+
+git clone <https://github.com/aws-samples/sample-avp-iot-demo>
+
+### Deploy the CDK stacks
+
+Follow the detailed setup instructions in the
+[SETUP.md](./SETUP.md)
+file for complete CDK deployment steps, including virtualenv setup, dependencies installation, and stack deployment.
+
+## Set up the user permission on AWS Console
+
+With the solution in place, the next step is to set up and test a user.
+
+**To create an Amazon Cognito user:**
+
+1.  Go to the AWS Management Console for [Amazon
+    Cognito](https://console.aws.amazon.com/cognito).
+
+2.  Locate and select the user pool created using the AWS CDK.
+
+3.  On the left side panel, select **Users**.
+
+4.  On the top right, choose **Create User**.
+
+    a.  Select **Don\'t send an invitation** for the invitation message.
+
+    b.  Enter your email address in the **Email Address**.
+
+    c.  Enter a password for the user.
+
+    d.  Choose **Create User**.
+
+**Note**: You will be prompted to change your password upon first sign
+in to the application
+
+**To add an Amazon Cognito user to a group:**
+
+1.  Go to the [Amazon Cognito
+    console](https://console.aws.amazon.com/cognito).
+
+2.  Select the user pool created using the AWS CDK.
+
+3.  On the left side panel, select **Groups**.
+
+4.  Select the **manager** group.
+
+5.  On the right, choose **Add user to group**.
+
+6.  Select the previously created user, and choose **Add**.
+
+### Important notes:
+
+- The user has now been added to the manager group. You can repeat the
+  same process for the operator group, but make sure that a user is only
+  a member of either manager or operator, not both.
+
+- The group information for a user is contained in the JWT token issued
+  on each sign-in. A sign-out is required to reset the group tied to a
+  user.
+
+### IoT device testing (for manager role)
+
+The next step is to verify that the IoT device correctly receives and
+processes commands from authorized users.
+
+**To test the MQTT communication channel:**
+
+1.  Sign in to the [Amazon EC2](https://console.aws.amazon.com/ec2/)
+    instance using [Session Manager, a capability of AWS Systems
+    Manager](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager.html)
+    that lets you manage your Amazon EC2 instances through an
+    interactive one-click browser-based shell or through the [AWS
+    Command Line Intervace (AWS CLI)](https://aws.amazon.com/cli).
+
+2.  Execute the following commands:
+
+    a.  sudo su
+
+    b.  python3 /home/ec2-user/device_code/local_subscribe.py \--topic
+        my/custom/topic \--client-id avp-iot-device
+
+        i.  Replace my/custom/topic and avp-iot-device with names used
+            for IoT topic name and IoT Thing name while deploying
+            IoTThingStack
+
+        ii. if the script returns an error for disconnect or connects to
+            the us-east-1 endpoint while the stack is deployed in
+            another AWS Region, make sure that you set export
+            AWS_DEFAULT_REGION="*\<Stack* *Region* *name\>*" For
+            example us-west-2.
+
+    c.  View the downloaded file Expected Output:
+
 ```
-
-**Note: This stack does not create an S3 bucket, you need to create a bucket before deploying this stack**
-
-```bash
-cdk deploy IoTThingStack \
-  --parameters BucketName=iot-download-bucket \
-  --parameters TopicName=my/custom/topic \
-  --parameters ThingName=avp-iot-device
-```
-
-
-
-## Parameters Explanation
-
-| Parameter | Value | Description |
-|-----------|--------|-------------|
-| `BucketName` | `iot-download-bucket` | Name of the S3 bucket to be used for IoT file storage. This bucket should be created before deploying the stack. Also the bucket has to exist in the same AWS region as the Stack |
-| `TopicName` | `my/custom/topic` | MQTT topic name for IoT message routing. Uses forward slashes (`/`) for topic hierarchy. Defines the message path for publishing and subscribing IoT devices. For the purposes of this blog this will be the topic that the IoT device will subscribe to download files from S3|
-| `ThingName` | `avp-iot-device` | Name of the IoT Thing to be created. This will be the identity of your IoT device in AWS IoT Core. For the purposes of this blog, this will be the device that can be listed or the remote commands that will be sent to based on the persona logged into the WebApp|
-
-# Running the IoT Subscriber
-
-## Login to the EC2 device
-
-As part of this demo an EC2 instance will be deployed that acts as an IoT Thing. You can use the EC2 session manager to login to the device.
-
-## Start the IoT code that downloads the file from S3
-
-Switch to root user (superuser) by running the following command:
-
-```bash
-sudo su
-```
-
-Run the Python script:
-
-```bash
-python3 /home/ec2-user/device_code/local_subscribe.py --topic my/custom/topic --client-id avp-iot-device
-```
-
-**Note**: 
-
-* Replace `my/custom/topic` and `avp-iot-device` with names used for IoT topic name and IoT Thing name while deploying `IoTThingStack`
-
-* if the script returns an error for disconnect or connects to us-east-1 endpoint while stack is deployed in another region  make sure you set export AWS_DEFAULT_REGION="Stack region name For example us-west-2"
-
-## Expected Output
-
-```bash
 Initializing IoT subscriber...
 Connected to MQTT broker
 Subscribing to topic: my/custom/topic
 Subscribed to topic: my/custom/topic
 ```
 
-## Running in the background
+**Note**: This testing procedure validates the integration between
+Amazon Cognito authentication, AWS IoT Core MQTT messaging, [Amazon
+Simple Storage Service (Amazon S3)](https://aws.amazon.com/s3/) file
+access, and Amazon EC2 instance communication. The following response
+shows a correct MQTT message received and processing.
 
-**Note: Replace `my/custom/topic` and `avp-iot-device` with names used for IoT topic name and IoT Thing name while deploying `IoTThingStack`**
+## Test the solution
 
-```bash
-# Start in background
-nohup python3 /home/ec2-user/device_code/local_subscribe.py --topic my/custom/topic --client-id avp-iot-device > subscriber.log 2>&1 &
+After deploying the solution, it\'s important to verify that the
+role-based access control is working correctly. The following tests will
+help you confirm that users with different roles can only access the
+resources and perform actions according to their permissions. This
+validation verifies that your security implementation is functioning as
+designed.
 
-# Check process
-ps aux | grep local_subscribe.py
+**To test the web application:**
 
-# View logs
-tail -f subscriber.log
-```
+1.  Sign in to the application as either a manager or operator using the
+    credentials created in your [Amazon
+    Cognito](https://aws.amazon.com/cognito/) user setup.
 
-# AVP Stack Deployment Guide
+![Cognito Sign-in](./arch-images/SignIn.jpg)
 
-Deploy AVP stack containing API gateway, Lambda functions, Cognito, and AVP reosurces with the following command:
+Figure 3: Web application sign-in page
 
-```bash
-cdk deploy AvpIotDemoStack --outputs-file outputs.json
-```
+2.  After signing in, you will be presented with a simple UI displaying
+    two buttons that are accessible by specific groups:
 
-## Run value replacer script
+    a.  The **List IoT devices** button is accessible by both managers
+        and operators, and returns a list of IoT devices from AWS IoT
+        Core
 
-When the stack is deployed, execute the value replacer script to automatically replace template values with the output values generated by the CDK stack.
+![IoT Core Application](./arch-images/avpAppFirstPage.jpg)
 
-First, cd into the utils directory from root:
+Figure 4: Page showing available options
 
-```bash
-cd utils/
-```
+b.  The **Download File** button is only accessible by managers and,
+    when chosen, sends an MQTT message containing the [Amazon
+    S3](https://aws.amazon.com/s3/) path specified in the input box to
+    the IoT device configured through [Amazon
+    EC2](https://aws.amazon.com/ec2/).
 
-Then execute the script:
+![Download File Application](./arch-images/DownloadFileApp.jpg)
 
-```bash
-python3 values_replacer.py
-```
+Figure 5: Result of choosing **Download File**
 
-# Running the app locally
+## Best practices
 
-Before running the development server, make sure to have the requirement node dependencies installed. To install node dependencies, cd into the web_app directory from root:
+Some best practices to follow if you choose to deploy this solution as
+part of your projects:
 
-```bash
-cd web_app/
-```
+- **Device Communication Reliability** -- Implement retry mechanisms
+  following the [AWS IoT Core best
+  practices](https://docs.aws.amazon.com/iot/latest/developerguide/security-best-practices.html)
+  to help ensure consistent device connectivity. Configure appropriate
+  timeout settings to balance quick failure detection and allowing
+  sufficient time for operations to complete successfully.
 
-And run the following command:
+- **Permission Management** -- Cache permission boundaries from Amazon
+  Verified Permissions to reduce API calls and improve application
+  responsiveness. Implement efficient permission validation strategies
+  that minimize latency while maintaining security. Always apply the
+  [least privilege
+  principle](https://docs.aws.amazon.com/%20%20IAM/latest/UserGuide/best-practices.html#grant-least-privilege)
+  when assigning permissions to limit potential security risks.
 
-```bash
-npm install
-```
+- **Monitoring and Observability** -- Implement comprehensive device
+  status monitoring using [Amazon
+  CloudWatch](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Best-Practice-Alarms.html)
+  to maintain visibility into system health. Monitor connection status
+  and device activity patterns to detect anomalies before they impact
+  operations. Create dashboards for real-time device monitoring to
+  provide stakeholders with actionable insights.
 
-Once it’s done running, start the development server with:
+## Next steps
 
-```bash
-npm run dev
-```
+To learn more about the technologies used in this solution, consider the
+following resources and development paths:
 
-The command will open up a server on port 3000. From your browser, navigate to <http://localhost:3000/> to view the app.
+- **Learn more about Verified Permissions** -- Explore [Verified
+  Permissions
+  documentation](https://docs.aws.amazon.com/verifiedpermissions/latest/userguide/what-is-avp.html)
+  to deepen your understanding of policy modeling and evaluation
+  techniques. The documentation provides valuable insights into policy
+  store management, best practices for permission schemas, and advanced
+  authorization patterns that can help you optimize your access control
+  implementation.
 
-# Setup the user permission on AWS Console
+- **Deploy to AWS Amplify** --Take your application to the next level by
+  extending it with [AWS Amplify](https://aws.amazon.com/amplify).
+  Setting up Amplify hosting provides a streamlined way to deploy your
+  web application with built-in continuous integration and delivery
+  (CI/CD) pipelines for automated deployments. You can implement
+  additional API endpoints to expand functionality and add monitoring
+  and analytics to gain insights into application usage and performance.
 
-## Create an Amazon Cognito User
+- **Security enhancements** -- Continue strengthening your security
+  posture by implementing additional authentication methods beyond the
+  basic implementation. Further refine your fine-grained access controls
+  to address evolving organizational needs. Set up comprehensive
+  security monitoring and alerting to provide early warning of potential
+  security incidents and implement detailed audit logging to support
+  compliance requirements and security investigations.
 
-1. Navigate to the Amazon Cognito console
-2. Locate and click on the user pool created via AWS CDK
-3. From the left side panel, select "Users"
-4. On the top right, click on the "Create User" button
-   1. Select the "Don't send an invitation" option for Invitation message
-   2. Type your email address for the Email Address field
-   3. Set a password for the user
-   4. Click on "Create User" when finished
+## Conclusion
 
-**Note:** You will be prompted to change your password upon first login into the application
+In this post, you learned how to implement RBAC for IoT devices using
+Verified Permissions and AWS IoT Core. The solution showcases how you
+can securely manage access to IoT devices by different user roles, such
+as managers and operators, with fine-grained permissions.
 
-## Add Amazon Cognito User to Group
+The implementation uses several AWS services working together
+seamlessly:
 
-1. Navigate to the Amazon Cognito console
-2. Locate and click on the user pool created via AWS CDK
-3. From the left side panel, select "Groups"
-4. Click on the manager group
-5. On the right, click on the "Add user to group" button
-6. Select the previously created user, and click on "Add"
+- Amazon Cognito for user authentication and group management
 
-## Important Notes
+- Amazon Verified Permissions for scalable, fine-grained authorization
 
-* The user has now been added to the manager group. You can repeat the same process for the operator group, but ensure a user is only part of one group, either manager or operator.
-* The group information for a user is contained in the JWT token issued on each login. A sign out is required to reset the group tied to a user.
-* Amazon Cognito user pools help you manage user directories and handle user authentication and authorization.
+- AWS IoT Core for device connectivity and message routing
+
+- Amazon API Gateway and AWS Lambda for secure API endpoints
+
+## Author bios
+
+**Davide Merlin Davide**
+
+David is a Delivery Consultant at AWS Professional Services based in
+Jersey City. He specializes in backend development of cloud-native
+applications, with a focus on API architecture. In his free time, he
+enjoys playing video games, trying out new restaurants, and watching new
+shows.
+
+**Joyson Neville Lewis**
+
+[Joyson](https://www.linkedin.com/in/joyson-lewis) is a Sr.
+Conversational AI Architect with AWS Professional Services. Joyson
+worked as a Software/Data engineer before diving into the Conversational
+AI and Industrial IoT space. He assists AWS customers to materialize
+their AI visions using Voice Assistant/Chatbot and IoT solutions.
