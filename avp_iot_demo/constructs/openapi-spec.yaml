@@ -1,0 +1,138 @@
+openapi: 3.0.3
+info:
+  title: AVP - AWS IoT Demo blog post
+  description: API for AVP blog post
+  version: 1.0.0
+servers:
+  - url: /
+
+paths:
+  /devices:
+    get:
+      operationId: listDevices
+      summary: List devices
+      description: List IoT devices
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Devices"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+      tags:
+        - Devices
+      security:
+        - AvpAuthorizer: []
+      x-amazon-apigateway-integration:
+        uri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${devices_lambda_arn}/invocations
+        httpMethod: POST
+        type: AWS_PROXY
+      x-permissions-actions:
+        - listDevices
+
+  /download:
+    post:
+      operationId: Publish
+      summary: Publishes a MQTT message
+      description: Publishes a MQTT message to IoT device
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Download"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+      tags:
+        - Download
+      security:
+        - AvpAuthorizer: []
+      x-amazon-apigateway-integration:
+        uri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${download_lambda_arn}/invocations
+        httpMethod: POST
+        type: AWS_PROXY
+      x-permissions-actions:
+        - Publish
+
+  /role:
+    get:
+      operationId: listRole
+      summary: List role for logged in user
+      description: List role for logged in user
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Role"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+      tags:
+        - Role
+      x-amazon-apigateway-integration:
+        uri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${role_lambda_arn}/invocations
+        httpMethod: POST
+        type: AWS_PROXY
+      x-permissions-actions:
+        - listRole
+
+components:
+  responses:
+    Unauthorized:
+      description: 401 Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/HttpError"
+    Forbidden:
+      description: 403 Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/HttpError"
+
+  schemas:
+    HttpError:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+    Devices:
+      type: object
+      required:
+        - thingNames
+      properties:
+        thingNames:
+          type: array
+          items:
+            type: string
+    Role:
+      type: object
+      required:
+        - roleNames
+    Download:
+      type: object
+
+  securitySchemes:
+    AvpAuthorizer:
+      type: apiKey
+      name: Authorization
+      in: header
+      x-amazon-apigateway-authtype: custom
+      x-amazon-apigateway-authorizer:
+        type: request
+        identitySource: method.request.header.Authorization,context.httpMethod,context.path
+        authorizerUri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambda_authorizer_arn}/invocations
+        authorizerResultTtlInSeconds: 300

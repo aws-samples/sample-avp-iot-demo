@@ -1,0 +1,57 @@
+{
+    "AvpIotDemoApi": {
+        "entityTypes": {
+            "User": {
+                "shape": {
+                    "type": "Record",
+                    "attributes": {}
+                },
+                "memberOfTypes": [
+                    "UserGroup"
+                ]
+            },
+            "UserGroup": {
+                "shape": {
+                    "attributes": {},
+                    "type": "Record"
+                }
+            },
+            "Application": {
+                "shape": {
+                    "attributes": {},
+                    "type": "Record"
+                }
+            }
+        },
+        "actions": {
+            "get /devices": {
+                "appliesTo": {
+                    "context": {
+                        "type": "Record",
+                        "attributes": {}
+                    },
+                    "principalTypes": [
+                        "User"
+                    ],
+                    "resourceTypes": [
+                        "Application"
+                    ]
+                }
+            },
+            "post /download": {
+                "appliesTo": {
+                    "context": {
+                        "type": "Record",
+                        "attributes": {}
+                    },
+                    "principalTypes": [
+                        "User"
+                    ],
+                    "resourceTypes": [
+                        "Application"
+                    ]
+                }
+            }
+        }
+    }
+}

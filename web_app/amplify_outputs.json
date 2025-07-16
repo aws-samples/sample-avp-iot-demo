@@ -1,0 +1,35 @@
+{
+  "auth": {
+    "user_pool_id": "TO_BE_REPLACED",
+    "user_pool_client_id": "TO_BE_REPLACED",
+    "mfa_methods": [],
+    "standard_required_attributes": [
+      "email"
+    ],
+    "username_attributes": [
+      "email"
+    ],
+    "user_verification_types": [
+      "email"
+    ],
+    "mfa_configuration": "NONE",
+    "password_policy": {
+      "min_length": 8,
+      "require_lowercase": true,
+      "require_numbers": true,
+      "require_symbols": true,
+      "require_uppercase": true
+    }
+  },
+  "_comment": "This section is not getting used (peep mock values), but it's needed for Amplify Gen 2 to connect front and backend",
+  "data": {
+    "url": "https://test.appsync-api.region.amazonaws.com/graphql",
+    "api_key": "fake-api-key",
+    "default_authorization_type": "API_KEY",
+    "authorization_types": [
+      "AMAZON_COGNITO_USER_POOLS",
+      "AWS_IAM"
+    ]
+  },
+  "version": "1.3"
+}
