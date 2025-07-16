@@ -1,7 +1,7 @@
 
 # Implement role-based access control (RBAC) to IoT devices with Amazon Verified Permissions
 
-This is a sample cdk project used to demo [Amazon Verified Permissions](https://aws.amazon.com/verified-permissions/) integration with [AWS IoT](https://aws.amazon.com/iot-core/).  [Click here to view the blog{WIP}](www.example.com)
+This is a sample cdk project used to demo [Amazon Verified Permissions](https://aws.amazon.com/verified-permissions/) integration with [AWS IoT](https://aws.amazon.com/iot-core/).
 
 This project is set up like a standard [CDK Python project](https://docs.aws.amazon.com/cdk/v2/guide/work-with-cdk-python.html).  The initialization
 process also creates a virtualenv within this project, stored under the `.venv`

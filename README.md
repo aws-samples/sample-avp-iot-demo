@@ -43,7 +43,7 @@ messages to IoT devices based on a user\'s role. This application uses
 several AWS services working together.
 
 - [Amazon
-  Cognito](https://aws.amazon.com/pm/cognito/?trk=f5fef02c-2926-48d3-898a-b4d668742a20&sc_channel=ps&ef_id=EAIaIQobChMItIXQnp-mjQMVD15HAR2AeiAiEAAYASAAEgKvjPD_BwE:G:s&s_kwcid=AL!4422!3!651737511575!e!!g!!amazon%20cognito!19845796024!146736269189&gad_campaignid=19845796024&gbraid=0AAAAADjHtp8fC8LBwojyLvJJqp6fjuDYo&gclid=EAIaIQobChMItIXQnp-mjQMVD15HAR2AeiAiEAAYASAAEgKvjPD_BwE)
+  Cognito](https://aws.amazon.com/pm/cognito)
   -- A user identity and data synchronization service that helps you add
   user sign-up, sign-in, and access control to your applications
 
@@ -53,7 +53,7 @@ several AWS services working together.
   fine-grained access control
 
 - [AWS
-  Lambda](https://aws.amazon.com/pm/lambda/?trk=73f686c8-9606-40ad-852f-7b2bcafa68fe&sc_channel=ps&ef_id=EAIaIQobChMIx_Hon5-mjQMVbVRHAR23hh6JEAAYASAAEgL6PPD_BwE:G:s&s_kwcid=AL!4422!3!651212652666!e!!g!!lambda!909122559!45462427876&gad_campaignid=909122559&gbraid=0AAAAADjHtp_9Xr57mZ38n8Eb-4Sur8ave&gclid=EAIaIQobChMIx_Hon5-mjQMVbVRHAR23hh6JEAAYASAAEgL6PPD_BwE)
+  Lambda](https://aws.amazon.com/pm/lambda)
   -- A serverless compute service that you can use to run code without
   provisioning or managing servers
 
@@ -65,7 +65,7 @@ several AWS services working together.
   and other devices
 
 - [Amazon Elastic Compute Cloud (Amazon
-  EC2)](https://aws.amazon.com/pm/ec2/?trk=36c6da98-7b20-48fa-8225-4784bced9843&sc_channel=ps&ef_id=EAIaIQobChMInJmMo5-mjQMVNklHAR0fNAQ-EAAYASAAEgJ1mvD_BwE:G:s&s_kwcid=AL!4422!3!467723097970!e!!g!!aws%20ec2!11198711716!118263955828&gad_campaignid=11198711716&gbraid=0AAAAADjHtp9XL9SPpFddFB08zim5tSZyf&gclid=EAIaIQobChMInJmMo5-mjQMVNklHAR0fNAQ-EAAYASAAEgJ1mvD_BwE)
+  EC2)](https://aws.amazon.com/pm/ec2)
   -- A service that provides secure, resizable compute capacity in the
   cloud
 
@@ -489,7 +489,7 @@ designed.
     credentials created in your [Amazon
     Cognito](https://aws.amazon.com/cognito/) user setup.
 
-![Cognito Sign-in](./arch-images/sing-in.jpg)
+![Cognito Sign-in](./arch-images/SignIn.jpg)
 
 Figure 3: Web application sign-in page
 
