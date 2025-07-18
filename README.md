@@ -8,7 +8,7 @@ organizations scale their IoT deployments, managing secure access
 becomes increasingly complex. Consider a large manufacturing facility
 with hundreds of connected devices across multiple production lines. The
 facility employs maintenance technicians, process engineers, IT staff,
-and operations managers---each requiring different levels of access to
+and operations managers each requiring different levels of access to
 these IoT devices.
 
 When a critical machine on Production Line A malfunctions, the facility
@@ -44,33 +44,33 @@ several AWS services working together.
 
 - [Amazon
   Cognito](https://aws.amazon.com/pm/cognito)
-  -- A user identity and data synchronization service that helps you add
+  - A user identity and data synchronization service that helps you add
   user sign-up, sign-in, and access control to your applications
 
 - [Amazon Verified
-  Permissions](https://aws.amazon.com/verified-permissions/) -- A
+  Permissions](https://aws.amazon.com/verified-permissions/) - A
   scalable permissions management and authorization service for
   fine-grained access control
 
 - [AWS
   Lambda](https://aws.amazon.com/pm/lambda)
-  -- A serverless compute service that you can use to run code without
+  - A serverless compute service that you can use to run code without
   provisioning or managing servers
 
-- [Amazon API Gateway](https://aws.amazon.com/api-gateway/) -- A fully
+- [Amazon API Gateway](https://aws.amazon.com/api-gateway/) - A fully
   managed service used to create, publish, and secure APIs
 
-- [AWS IoT Core](https://aws.amazon.com/iot-core/) -- A managed cloud
+- [AWS IoT Core](https://aws.amazon.com/iot-core/) - A managed cloud
   platform that lets connected devices interact with cloud applications
   and other devices
 
 - [Amazon Elastic Compute Cloud (Amazon
   EC2)](https://aws.amazon.com/pm/ec2)
-  -- A service that provides secure, resizable compute capacity in the
+  - A service that provides secure, resizable compute capacity in the
   cloud
 
 - [AWS Identity and Access Management
-  (IAM)](https://aws.amazon.com/iam/) -- A service for securely
+  (IAM)](https://aws.amazon.com/iam/) - A service for securely
   controlling access to AWS services and resources
 
 Depending on each user\'s role and allowable permissions, they will be
@@ -116,7 +116,6 @@ applications. It emerged from the need for a more expressive,
 maintainable, and scalable authorization solution than traditional
 role-based access control systems.
 
- 
 
 Cedar is designed to be human-readable while providing powerful
 authorization capabilities that can handle fine-grained permissions
@@ -125,11 +124,11 @@ enabling developers to implement consistent, auditable authorization
 logic that can evolve with changing business requirements without
 sacrificing security or performance.
 
-- **Principal** -- The user or service making the request
+- **Principal** - The user or service making the request
 
-- **Action** -- The operation is being performed
+- **Action** - The operation that is being performed
 
-- **Resource** -- The entity is being accessed
+- **Resource** - The entity that is being accessed
 
 ### Basic Cedar policy structure
 
@@ -394,7 +393,7 @@ With the solution in place, the next step is to set up and test a user.
 
     a.  Select **Don\'t send an invitation** for the invitation message.
 
-    b.  Enter your email address in the **Email Address**.
+    b.  Enter your email address in the **Email Address** field.
 
     c.  Enter a password for the user.
 
@@ -440,14 +439,14 @@ processes commands from authorized users.
     Manager](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager.html)
     that lets you manage your Amazon EC2 instances through an
     interactive one-click browser-based shell or through the [AWS
-    Command Line Intervace (AWS CLI)](https://aws.amazon.com/cli).
+    Command Line Interface (AWS CLI)](https://aws.amazon.com/cli).
 
 2.  Execute the following commands:
 
     a.  sudo su
 
-    b.  python3 /home/ec2-user/device_code/local_subscribe.py \--topic
-        my/custom/topic \--client-id avp-iot-device
+    b.  python3 /home/ec2-user/device_code/local_subscribe.py --topic
+        my/custom/topic --client-id avp-iot-device
 
         i.  Replace my/custom/topic and avp-iot-device with names used
             for IoT topic name and IoT Thing name while deploying
@@ -519,22 +518,22 @@ Figure 5: Result of choosing **Download File**
 Some best practices to follow if you choose to deploy this solution as
 part of your projects:
 
-- **Device Communication Reliability** -- Implement retry mechanisms
+- **Device Communication Reliability** - Implement retry mechanisms
   following the [AWS IoT Core best
   practices](https://docs.aws.amazon.com/iot/latest/developerguide/security-best-practices.html)
   to help ensure consistent device connectivity. Configure appropriate
   timeout settings to balance quick failure detection and allowing
   sufficient time for operations to complete successfully.
 
-- **Permission Management** -- Cache permission boundaries from Amazon
+- **Permission Management** - Cache permission boundaries from Amazon
   Verified Permissions to reduce API calls and improve application
   responsiveness. Implement efficient permission validation strategies
   that minimize latency while maintaining security. Always apply the
   [least privilege
-  principle](https://docs.aws.amazon.com/%20%20IAM/latest/UserGuide/best-practices.html#grant-least-privilege)
+  principle](https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html#grant-least-privilege)
   when assigning permissions to limit potential security risks.
 
-- **Monitoring and Observability** -- Implement comprehensive device
+- **Monitoring and Observability** - Implement comprehensive device
   status monitoring using [Amazon
   CloudWatch](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Best-Practice-Alarms.html)
   to maintain visibility into system health. Monitor connection status
@@ -547,7 +546,7 @@ part of your projects:
 To learn more about the technologies used in this solution, consider the
 following resources and development paths:
 
-- **Learn more about Verified Permissions** -- Explore [Verified
+- **Learn more about Verified Permissions** - Explore [Verified
   Permissions
   documentation](https://docs.aws.amazon.com/verifiedpermissions/latest/userguide/what-is-avp.html)
   to deepen your understanding of policy modeling and evaluation
@@ -556,7 +555,7 @@ following resources and development paths:
   authorization patterns that can help you optimize your access control
   implementation.
 
-- **Deploy to AWS Amplify** --Take your application to the next level by
+- **Deploy to AWS Amplify** - Take your application to the next level by
   extending it with [AWS Amplify](https://aws.amazon.com/amplify).
   Setting up Amplify hosting provides a streamlined way to deploy your
   web application with built-in continuous integration and delivery
@@ -564,7 +563,7 @@ following resources and development paths:
   additional API endpoints to expand functionality and add monitoring
   and analytics to gain insights into application usage and performance.
 
-- **Security enhancements** -- Continue strengthening your security
+- **Security enhancements** - Continue strengthening your security
   posture by implementing additional authentication methods beyond the
   basic implementation. Further refine your fine-grained access controls
   to address evolving organizational needs. Set up comprehensive
@@ -592,9 +591,9 @@ seamlessly:
 
 ## Author bios
 
-**Davide Merlin Davide**
+**Davide Merlin**
 
-David is a Delivery Consultant at AWS Professional Services based in
+Davide is a Cloud Application Architect at AWS Professional Services based in
 Jersey City. He specializes in backend development of cloud-native
 applications, with a focus on API architecture. In his free time, he
 enjoys playing video games, trying out new restaurants, and watching new
