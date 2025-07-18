@@ -42,19 +42,14 @@ enable fine-grained access control to send out command and control
 messages to IoT devices based on a user\'s role. This application uses
 several AWS services working together.
 
-- [Amazon
-  Cognito](https://aws.amazon.com/pm/cognito)
-  - A user identity and data synchronization service that helps you add
+- [Amazon Cognito](https://aws.amazon.com/pm/cognito) - A user identity and data synchronization service that helps you add
   user sign-up, sign-in, and access control to your applications
 
-- [Amazon Verified
-  Permissions](https://aws.amazon.com/verified-permissions/) - A
+- [Amazon Verified Permissions](https://aws.amazon.com/verified-permissions/) - A
   scalable permissions management and authorization service for
   fine-grained access control
 
-- [AWS
-  Lambda](https://aws.amazon.com/pm/lambda)
-  - A serverless compute service that you can use to run code without
+- [AWS Lambda](https://aws.amazon.com/pm/lambda) - A serverless compute service that you can use to run code without
   provisioning or managing servers
 
 - [Amazon API Gateway](https://aws.amazon.com/api-gateway/) - A fully
@@ -64,13 +59,10 @@ several AWS services working together.
   platform that lets connected devices interact with cloud applications
   and other devices
 
-- [Amazon Elastic Compute Cloud (Amazon
-  EC2)](https://aws.amazon.com/pm/ec2)
-  - A service that provides secure, resizable compute capacity in the
+- [Amazon Elastic Compute Cloud (Amazon EC2)](https://aws.amazon.com/pm/ec2) - A service that provides secure, resizable compute capacity in the
   cloud
 
-- [AWS Identity and Access Management
-  (IAM)](https://aws.amazon.com/iam/) - A service for securely
+- [AWS Identity and Access Management (IAM)](https://aws.amazon.com/iam/) - A service for securely
   controlling access to AWS services and resources
 
 Depending on each user\'s role and allowable permissions, they will be
@@ -218,8 +210,7 @@ following resources and tools available:
 
   - AWS credentials properly configured on your local machine
 
-- [AWS CDK
-  prerequisites](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html)
+- [AWS CDK prerequisites](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html)
 
   - [Git](https://git-scm.com/downloads)
 
